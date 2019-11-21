@@ -1,0 +1,15 @@
+*.so
+*.o
+a.out
+*.exe
+.DS_Store
+*.ipynb_checkpoints
+*.swp
+RcppExports.cpp
+RcppExports.R
+NAMESPACE
+*.Rd
+*.egg-info
+build
+dist
+R/*.tar.gz

@@ -1,0 +1,15 @@
+Package: SBCK
+Type: Package
+Title: Statistical Bias Correction Kit
+Version: 0.1.0
+Date: 2019-10-25
+Authors@R: person("Yoann", "Robin", email = "yoann.robin.k@gmail.com", role = c("aut", "cre"))
+Description: Bias Correction
+Depends: R (>= 3.3.3)
+License: CeCILL-C
+Encoding: UTF-8
+LazyData: true
+NeedsCompilation: yes
+Imports: Rcpp, RcppEigen, methods, R6
+LinkingTo: Rcpp, RcppEigen
+RoxygenNote: 6.1.1
