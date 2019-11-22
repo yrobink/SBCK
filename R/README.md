@@ -7,6 +7,21 @@
 - Quantile Mapping [2,3,4] and CDFt methods [5] 
 - OTC and dOTC methods [6]
 
+## R instruction
+
+Requires:
+- R
+- roxygen2
+- devtools
+- Rcpp
+- RcppEigen
+- methods
+- R6
+
+Just run:
+```
+Rscript build.R -c -v -i
+```
 
 ## Examples
 

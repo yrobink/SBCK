@@ -7,6 +7,41 @@
 - Quantile Mapping [2,3,4] and CDFt methods [5] 
 - OTC and dOTC methods [6]
 
+## Python instruction
+
+Requires:
+- python3
+- [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page)
+- numpy
+- scipy
+- pybind11
+
+For python, just use the command:
+```
+python3 setup.py install --user
+```
+
+If the Eigen library is not found, use:
+```
+python3 setup.py install --user eigen="path-to-eigen"
+```
+
+## R instruction
+
+Requires:
+- R
+- roxygen2
+- devtools
+- Rcpp
+- RcppEigen
+- methods
+- R6
+
+Just run:
+```
+Rscript build.R -c -v -i
+```
+
 
 ## Examples
 
