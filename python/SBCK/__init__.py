@@ -83,12 +83,13 @@
 ##################################################################################
 ##################################################################################
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 from .__QM    import QM
 from .__CDFt  import CDFt
 from .__OTC   import OTC
 from .__dOTC  import dOTC
+from .__QMrs  import QMrs
 
 
 
