@@ -95,7 +95,7 @@ library(roxygen2)
 library(ggplot2)
 library(gridExtra)
 
-roxygen2::roxygenize("../R/SBCK")
+try(roxygen2::roxygenize("../R/SBCK"))
 devtools::load_all("../R/SBCK")
 roxygen2::roxygenize("../R/SBCK")
 devtools::load_all("../R/SBCK")
@@ -271,7 +271,6 @@ test_OT = function( show = FALSE )##{{{
 }
 ##}}}
 
-
 ## Test metrics
 ##=============
 
@@ -359,6 +358,51 @@ test_qm = function( show = FALSE )##{{{
 }
 ##}}}
 
+test_qmrs = function( show = FALSE )##{{{
+{
+	X0 = base::cbind( stats::rnorm(2000) , stats::rexp(2000)  )
+	Y0 = base::cbind( stats::rexp(2000)  , stats::rnorm(2000) )
+	X1 = base::cbind( stats::rnorm(2000 , mean = 5 ) , stats::rexp(2000)  )
+	
+	qmrs = SBCK::QMrs$new()
+	qmrs$fit( Y0 , X0 )
+	Z0 = qmrs$predict(X0)
+	
+	r2d2 = SBCK::R2D2$new()
+	r2d2$fit( Y0 , X0 , X1 )
+	Z1 = r2d2$predict(X1)
+	
+	if(show)
+	{
+		plt$new_screen()
+		
+		g0 = ggplot2::ggplot( data.frame( x = X0[,1] , y = X0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g0 = g0 + ggplot2::geom_point( color = "red" )
+		g0 = g0 + ggplot2::ggtitle( "X0" )
+		
+		g1 = ggplot2::ggplot( data.frame( x = Y0[,1] , y = Y0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g1 = g1 + ggplot2::geom_point( color = "blue" )
+		g1 = g1 + ggplot2::ggtitle( "Y0" )
+		
+		g2 = ggplot2::ggplot( data.frame( x = Z0[,1,1] , y = Z0[,2,1] ) , ggplot2::aes( x = x , y = y ) )
+		g2 = g2 + ggplot2::geom_point( color = "green" )
+		g2 = g2 + ggplot2::ggtitle( "Z0" )
+		
+		g3 = ggplot2::ggplot( data.frame( x = X1[,1] , y = X1[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g3 = g3 + ggplot2::geom_point( color = "red" )
+		g3 = g3 + ggplot2::ggtitle( "X1" )
+		
+		g5 = ggplot2::ggplot( data.frame( x = Z1[,1,1] , y = Z1[,2,1] ) , ggplot2::aes( x = x , y = y ) )
+		g5 = g5 + ggplot2::geom_point( color = "green" )
+		g5 = g5 + ggplot2::ggtitle( "Z1" )
+		
+		
+		g = gridExtra::grid.arrange( g0 , g1 , g2 , g3 , ggplot2::ggplot() , g5 , ncol = 3 , nrow = 2 )
+		graphics::plot(g)
+	}
+}
+##}}}
+
 test_otc = function( show = FALSE )##{{{
 {
 	X0 = base::cbind( stats::rnorm(2000) , stats::rexp(2000)  )
@@ -420,6 +464,7 @@ run_all_tests = function( show = FALSE )##{{{
 	
 	## BC tests
 	test_qm(show)
+	test_qmrs(show)
 	test_otc(show)
 }
 ##}}}
