@@ -85,6 +85,7 @@
 ## Libraries ##
 ###############
 
+import sys
 import numpy as np
 import scipy.stats as sc
 import statsmodels.tsa.stattools as stt
@@ -352,10 +353,24 @@ def run_all_test( plot = False ):##{{{
 if __name__ == "__main__":
 	
 	print(bc.__version__)
-	
 	np.random.seed(42)
 	
-	run_all_test(True)
+	## Run tests
+	##==========
+	##{{{
+	args_run     = False
+	args_verbose = False
+	if len(sys.argv) > 1:
+		for arg in sys.argv[1:]:
+			if arg == "-r" or "arg" == "--run-all-tests":
+				args_run = True
+			if arg == "-v" or "arg" == "--verbose":
+				args_verbose = True
+	
+	if args_run:
+		run_all_test(args_verbose)
+	
+	##}}}
 	
 	print( "Done" )
 
