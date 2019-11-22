@@ -89,7 +89,6 @@ from .__QM    import QM
 from .__CDFt  import CDFt
 from .__OTC   import OTC
 from .__dOTC  import dOTC
-from .__QMrs  import QMrs
 
 
 
