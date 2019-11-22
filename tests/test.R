@@ -419,7 +419,6 @@ run_all_tests = function( show = FALSE )##{{{
 	
 	## BC tests
 	test_qm(show)
-	test_qmrs(show)
 	test_otc(show)
 }
 ##}}}
