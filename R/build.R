@@ -139,7 +139,7 @@ if( build )
 if( check )
 {
 	if( verbose ) cat( "Check SBCK" )
-	devtools::check( "SBCK" )
+	try(devtools::check( "SBCK" ))
 }
 
 
