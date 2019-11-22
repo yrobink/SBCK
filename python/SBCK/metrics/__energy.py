@@ -105,10 +105,10 @@ def energy( muX , muY , p = 2. , metric = "euclidean" ):
 
 	Parameters
 	----------
-	muX      : SBCK.SparseHist
-		Histogram
-	muY      : SBCK.SparseHist
-		Histogram
+	muX      : SBCK.SparseHist or np.array
+		Histogram or dataset
+	muY      : SBCK.SparseHist or np.array
+		Histogram or dataset
 	p        : float
 		Power of the metric function
 	metric   : str or callable

@@ -106,10 +106,10 @@ def minkowski( muX , muY , p ):
 
 	Parameters
 	----------
-	muX      : SBCK.SparseHist
-		Histogram
-	muY      : SBCK.SparseHist
-		Histogram
+	muX      : SBCK.SparseHist or np.array
+		Histogram or dataset
+	muY      : SBCK.SparseHist or np.array
+		Histogram or dataset
 	p      : float or np.inf (for Chebyshev distance)
 		Power of the distance. If p = 2, it is euclidean distance
 

@@ -89,7 +89,6 @@
 
 import numpy as np
 from SBCK.tools.__OT import OTNetworkSimplex
-from SBCK.tools.__tools_cpp import SparseHist
 from .__decorators import _to_SparseHist
 
 
@@ -106,10 +105,10 @@ def wasserstein( muX , muY , p = 2. , ot = OTNetworkSimplex() , metric = "euclid
 	
 	Parameters
 	----------
-	muX      : SBCK.SparseHist
-		Histogram
-	muY      : SBCK.SparseHist
-		Histogram
+	muX      : SBCK.SparseHist or np.array
+		Histogram or dataset
+	muY      : SBCK.SparseHist or np.array
+		Histogram or dataset
 	p      : float
 		Power of the cost function
 	metric : str or callable

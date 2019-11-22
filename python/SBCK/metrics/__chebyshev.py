@@ -101,10 +101,10 @@ def chebyshev( muX , muY ):
 
 	Parameters
 	----------
-	muX      : SBCK.SparseHist
-		Histogram
-	muY      : SBCK.SparseHist
-		Histogram
+	muX      : SBCK.SparseHist or np.array
+		Histogram or dataset
+	muY      : SBCK.SparseHist or np.array
+		Histogram or dataset
 
 	Return
 	------
