@@ -117,6 +117,7 @@ def bin_width_estimator( X , method = "auto" ):
 	if type(X) == list:
 		return np.min( [ bin_width_estimator( x , method ) for x in X ] , axis = 0 )
 	
+	if X.ndim == 1 : X = X.reshape(-1,1)
 	
 	if method == "auto":
 		method = "Sturges" if X.shape[0] < 1000 else "FD"

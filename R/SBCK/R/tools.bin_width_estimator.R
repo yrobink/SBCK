@@ -105,6 +105,14 @@
 #' @export
 bin_width_estimator = function( X , method = "auto" ) 
 {
+	if( class(X) == "list" )
+	{
+		bw = matrix( NA , nrow = length(X) , ncol = base::ncol(X[[1]]) )
+		for( i in 1:length(X) )
+			bw[i,] = SBCK::bin_width_estimator( X[[i]] , method )
+		return( base::apply( bw , 2 , base::min ) )
+	}
+	
 	if( class(X) == "numeric" )
 		X = matrix( X , nrow = length(X) , ncol = 1 )
 	
@@ -131,35 +139,6 @@ bin_width_estimator = function( X , method = "auto" )
 		bin_width = 2 * ( q[2,] - q[1,] ) / pow
 	}
 	
-	invisible(as.vector(bin_width))
-}
-
-
-#' common_bin_width_estimator method
-#'
-#' Common lenght of cell to compute an histogram from many dataset
-#'
-#' @param lX [list of matrix]
-#'        A list of matrix containing data, nrow = n_samples, ncol = n_features
-#' @param method [string]
-#'        Method to estimate bin_width, values are "auto", "FD" (Friedman Draconis,
-#'        robust over outliners) or "Sturges". If "auto" is used and if nrow(X) < 1000,
-#'        "Sturges" is used, else "FD" is used.
-#'        
-#' @return [vector] Lenght of bins
-#'
-#' @examples
-#' X = base::cbind( stats::rnorm( n = 2000 ) , stats::rexp(2000) )
-#' Y = base::cbind( stats::rnorm( n = 2000 ) , stats::rexp(2000) )
-#' Z = base::cbind( stats::rnorm( n = 2000 ) , stats::rexp(2000) )
-#' bin_width = common_bin_width_estimator( list(X,Y,Z) )
-#'
-#' @export
-common_bin_width_estimator = function( lX , method = "auto" )
-{
-	bw = matrix( NA , nrow = length(lX) , ncol = dim(lX[[1]])[2] )
-	for( i in 1:length(lX) )
-		bw[i,] = SBCK::bin_width_estimator( lX[[i]] , method )
-	invisible( base::apply( bw , 2 , base::min ) )
+	return(as.vector(bin_width))
 }
 

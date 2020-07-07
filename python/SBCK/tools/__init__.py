@@ -84,9 +84,19 @@
 ##################################################################################
 
 
-from .__tools_cpp           import SparseHist
-from .__bin_width_estimator import bin_width_estimator
-from .__OT                  import OTNetworkSimplex
-from .__OT                  import OTSinkhorn
-from .__OT                  import OTSinkhornLogDual
+from .__tools_cpp             import SparseHist
+from .__bin_width_estimator   import bin_width_estimator
+from .__OT                    import OTNetworkSimplex
+from .__OT                    import OTSinkhorn
+from .__OT                    import OTSinkhornLogDual
+from .__shuffle               import schaake_shuffle
+from .__shuffle               import SchaakeShuffle
+from .__shuffle               import SchaakeShuffleRef
+from .__SlopeStoppingCriteria import SlopeStoppingCriteria
+from .__rv_extend             import rv_histogram
+from .__rv_extend             import rv_ratio_histogram
+from .__rv_extend             import rv_density
+from .__rv_extend             import rv_mixture
+
+
 

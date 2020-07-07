@@ -93,7 +93,7 @@ import statsmodels.tsa.stattools as stt
 import SBCK as bc
 import SBCK.tools as bct
 import SBCK.metrics as bcm
-
+import SBCK.datasets as bcd
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -184,35 +184,38 @@ class AR:##{{{
 
 def test_qm( plot = True ):##{{{
 	## Dataset
-	size = 2000
-	X0   = np.random.normal( loc = 0 , scale = 1   , size = size     )
-	X1   = np.random.normal( loc = 5 , scale = 2   , size = size + 1 )
-	Y0   = np.random.normal( loc = 2 , scale = 0.5 , size = size + 2 )
+	Y0,X0,X1 = bcd.gaussian_exp_mixture_1d(2000)
 	
-	## QM correction
+	## QM
 	qm = bc.QM()
-	qm.fit( Y0 , X0 )
-	Z0 = qm.predict( X0 )
+	qm.fit(Y0,X0)
+	Z0 = qm.predict(X0)
 	
-	## CDFT correction
+	## CDFt
 	cdft = bc.CDFt()
 	cdft.fit( Y0 , X0 , X1 )
-	Z1 = cdft.predict( X1 )
+	Z1 = cdft.predict(X1)
+	Z  = cdft.predict( X1 , X0 )
 	
 	
 	## Plot
 	if plot:
+		
+		xmin = min( [T.min() for T in [X0,X1,Y0,Z0,Z1]] )
+		xmax = max( [T.max() for T in [X0,X1,Y0,Z0,Z1]] )
+		bins = np.linspace( xmin , xmax , 80 )
+		
 		nrow,ncol,fs = 1,2,7
 		fig = plt.figure( figsize = (fs*ncol,0.7*fs*nrow) )
 		
 		ax = fig.add_subplot( nrow , ncol , 1 )
-		ax.hist( X0 , bins = qm.bins[0] , color = "red"   , alpha = 0.5 , density = True )
-		ax.hist( Y0 , bins = qm.bins[0] , color = "blue"  , alpha = 0.5 , density = True )
-		ax.hist( Z0 , bins = qm.bins[0] , color = "green" , alpha = 0.5 , density = True )
+		ax.hist( X0 , bins = bins , color = "red"   , alpha = 0.5 , density = True )
+		ax.hist( Y0 , bins = bins , color = "blue"  , alpha = 0.5 , density = True )
+		ax.hist( Z0 , bins = bins , color = "green" , alpha = 0.5 , density = True )
 		
 		ax = fig.add_subplot( nrow , ncol , 2 )
-		ax.hist( X1 , bins = cdft.bins[0] , color = "red"   , alpha = 0.5 , density = True )
-		ax.hist( Z1 , bins = cdft.bins[0] , color = "green" , alpha = 0.5 , density = True )
+		ax.hist( X1 , bins = bins , color = "red"   , alpha = 0.5 , density = True )
+		ax.hist( Z1 , bins = bins , color = "green" , alpha = 0.5 , density = True )
 		
 		plt.tight_layout()
 		plt.show()
@@ -220,24 +223,24 @@ def test_qm( plot = True ):##{{{
 
 def test_otc_univ( plot = True ):##{{{
 	## Dataset
-	size = 2000
-	X0   = np.random.normal( loc = 0 , scale = 1   , size = (size  ,1) )
-	X1   = np.random.normal( loc = 5 , scale = 1   , size = (size+1,1) )
-	Y0   = np.random.normal( loc = 2 , scale = 0.5 , size = (size+2,1) )
-	
+	Y0,X0,X1 = bcd.gaussian_exp_mixture_1d(2000)
 	
 	## BC
 	otc = bc.OTC()
 	otc.fit( Y0 , X0 )
-	Z0 = otc.predict(X0)
+	Z0 = otc.predict( X0 )
 	
 	dotc = bc.dOTC()
 	dotc.fit( Y0 , X0 , X1 )
 	Z1 = dotc.predict( X1 )
+	Z = dotc.predict( X1 , X0 )
+	
 	
 	## Plot
 	if plot:
-		bins = np.linspace( min([ K.min() for K in [X0,X1,Y0,Z0,Z1] ]) , max([ K.max() for K in [X0,X1,Y0,Z0,Z1] ]) , 100 )
+		xmin = min( [T.min() for T in [X0,X1,Y0,Z0,Z1]] )
+		xmax = max( [T.max() for T in [X0,X1,Y0,Z0,Z1]] )
+		bins = np.linspace( xmin , xmax , 50 )
 		
 		nrow,ncol,fs = 1,2,7
 		fig = plt.figure( figsize = (fs*ncol,0.7*fs*nrow) )
@@ -257,27 +260,18 @@ def test_otc_univ( plot = True ):##{{{
 
 def test_otc_biv( plot = True ):##{{{
 	## Data
-	size = 2000
-	lmY0   = [ np.array([5,-3]) , np.array( [-3,3] ) ]
-	lcovY0 = [ 0.9 * np.identity(2) , np.identity(2) ]
-	lmX0   = [ np.zeros(2) , np.array( [2,2] ) ]
-	lcovX0 = [ np.identity(2) , 0.5 * np.identity(2) ]
-	lmX1   = [ np.zeros(2)  - 1. , np.array( [2,2] ) + 3 ]
-	lcovX1 = [ np.identity(2)  * 2 , 0.1 * np.identity(2) ]
-	Y0     = np.vstack( [ np.random.multivariate_normal( mean = m , cov = cov , size = size     ) for m,cov in zip(lmY0,lcovY0) ] )
-	X0     = np.vstack( [ np.random.multivariate_normal( mean = m , cov = cov , size = size + 1 ) for m,cov in zip(lmX0,lcovX0) ] )
-	X1     = np.vstack( [ np.random.multivariate_normal( mean = m , cov = cov , size = size + 2 ) for m,cov in zip(lmX1,lcovX1) ] )
+	Y0,X0,X1 = bcd.bimodal_reverse_2d(4000)
 	
-	
-	## Bias Correction
-	bw = None #[ 1. for _ in range(2) ]
-	otc = bc.OTC( bin_width = bw )
+	## BC
+	otc = bc.OTC()
 	otc.fit( Y0 , X0 )
 	Z0 = otc.predict( X0 )
 	
-	dotc = bc.dOTC( bin_width = bw )
+	dotc = bc.dOTC()
 	dotc.fit( Y0 , X0 , X1 )
-	Z1 = dotc.predict(X1)
+	Z1 = dotc.predict( X1 )
+	Z = dotc.predict( X1 , X0 )
+	
 	
 	if plot:
 		## Histogram
@@ -317,6 +311,335 @@ def test_otc_biv( plot = True ):##{{{
 		plt.show()
 ##}}}
 
+def test_ECBC( plot = True ):##{{{
+	
+	## Data
+	Y0,X0,X1 = bcd.bimodal_reverse_2d(4000)
+	
+	
+	## Bias Correction
+	irefs = [0]
+	
+	ecbc = bc.ECBC()
+	ecbc.fit( Y0 , X0 , X1 )
+	Z1,Z0 = ecbc.predict(X1,X0)
+	
+	
+	## Histogram
+	if plot:
+		xymin = np.min( [ Z.min() for Z in [Y0,X0,X1,Z0,Z1] ] ) 
+		xymax = np.max( [ Z.max() for Z in [Y0,X0,X1,Z0,Z1] ] ) 
+		bins = [ np.linspace( xymin , xymax , 100 ) for _ in range(2) ]
+		
+		lH = list()
+		for K in [Y0,X0,X1,Z0,Z1]:
+			H,_,_ = np.histogram2d( K[:,0] , K[:,1] , bins )
+			H /= np.sum(H)
+			H[H == 0] = np.nan
+			vmax = np.nanmax(H)
+			lH.append(H)
+		
+		
+		## Plot
+		cmapR = plt.cm.Reds
+		cmapG = plt.cm.inferno
+		cmapB = plt.cm.Blues
+		nrow,ncol,fs = 2,2,5
+		fig = plt.figure( figsize = (fs*ncol,fs*nrow) )
+		
+		ax = fig.add_subplot( nrow , ncol , 1 )
+		ax.imshow( np.rot90(lH[0]) , cmap = cmapB , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		ax.imshow( np.rot90(lH[1]) , cmap = cmapR , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 2 )
+		ax.imshow( np.rot90(lH[2]) , cmap = cmapR , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 3 )
+		ax.imshow( np.rot90(lH[3]) , cmap = cmapG , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 4 )
+		ax.imshow( np.rot90(lH[4]) , cmap = cmapG , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		plt.show()
+##}}}
+
+def test_qmrs( plot = True ):##{{{
+	
+	## Data
+	Y0,X0,X1 = bcd.bimodal_reverse_2d(4000)
+	
+	
+	## Bias Correction
+	irefs = [0]
+	
+	qmrs = bc.QMrs( irefs = irefs )
+	qmrs.fit( Y0 , X0 )
+	Z0 = qmrs.predict(X0)
+	
+	r2d2 = bc.R2D2( irefs = irefs )
+	r2d2.fit( Y0 , X0 , X1 )
+	Z1 = r2d2.predict(X1)
+	Z  = r2d2.predict(X1,X0)
+	
+	
+	## Histogram
+	if plot:
+		xymin = np.min( [ Z.min() for Z in [Y0,X0,X1,Z0,Z1] ] ) 
+		xymax = np.max( [ Z.max() for Z in [Y0,X0,X1,Z0,Z1] ] ) 
+		bins = [ np.linspace( xymin , xymax , 100 ) for _ in range(2) ]
+		
+		lH = list()
+		for K in [Y0,X0,X1,Z0,Z1]:
+			H,_,_ = np.histogram2d( K[:,0] , K[:,1] , bins )
+			H /= np.sum(H)
+			H[H == 0] = np.nan
+			vmax = np.nanmax(H)
+			lH.append(H)
+		
+		
+		## Plot
+		cmapR = plt.cm.Reds
+		cmapG = plt.cm.inferno
+		cmapB = plt.cm.Blues
+		nrow,ncol,fs = 2,2,5
+		fig = plt.figure( figsize = (fs*ncol,fs*nrow) )
+		
+		ax = fig.add_subplot( nrow , ncol , 1 )
+		ax.imshow( np.rot90(lH[0]) , cmap = cmapB , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		ax.imshow( np.rot90(lH[1]) , cmap = cmapR , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 2 )
+		ax.imshow( np.rot90(lH[2]) , cmap = cmapR , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 3 )
+		ax.imshow( np.rot90(lH[3]) , cmap = cmapG , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 4 )
+		ax.imshow( np.rot90(lH[4]) , cmap = cmapG , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		plt.show()
+##}}}
+
+def test_QDM( plot = True ):##{{{
+	## Data
+	Y0,X0,X1 = bcd.bimodal_reverse_2d(4000)
+	
+	## Bias Correction
+	qdm = bc.QDM()
+	qdm.fit( Y0 , X0 , X1 )
+	Z1,Z0 = qdm.predict(X1,X0)
+	
+	
+	if plot:
+		## Histogram
+		xymin = np.min( [ Z.min() for Z in [Y0,X0,X1,Z0,Z1] ] ) 
+		xymax = np.max( [ Z.max() for Z in [Y0,X0,X1,Z0,Z1] ] ) 
+		bins = [ np.linspace( xymin , xymax , 100 ) for _ in range(2) ]
+		
+		lH = list()
+		for K in [Y0,X0,X1,Z0,Z1]:
+			H,_,_ = np.histogram2d( K[:,0] , K[:,1] , bins )
+			H /= np.sum(H)
+			H[H == 0] = np.nan
+			vmax = np.nanmax(H)
+			lH.append(H)
+		
+		
+		## Plot
+		cmapR = plt.cm.Reds
+		cmapG = plt.cm.inferno
+		cmapB = plt.cm.Blues
+		nrow,ncol,fs = 2,2,5
+		fig = plt.figure( figsize = (fs*ncol,fs*nrow) )
+		
+		ax = fig.add_subplot( nrow , ncol , 1 )
+		ax.imshow( np.rot90(lH[0]) , cmap = cmapB , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		ax.imshow( np.rot90(lH[1]) , cmap = cmapR , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 2 )
+		ax.imshow( np.rot90(lH[2]) , cmap = cmapR , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 3 )
+		ax.imshow( np.rot90(lH[3]) , cmap = cmapG , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 4 )
+		ax.imshow( np.rot90(lH[4]) , cmap = cmapG , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		plt.show()
+##}}}
+
+def test_MBCn( plot = True ):##{{{
+	## Data
+	Y0,X0,X1 = bcd.bimodal_reverse_2d(4000)
+	
+	## Bias Correction
+	mbcn = bc.MBCn()
+	mbcn.fit( Y0 , X0 , X1 )
+	Z1,Z0 = mbcn.predict(X1,X0)
+	
+	if plot:
+		## Histogram
+		xymin = np.min( [ Z.min() for Z in [Y0,X0,X1,Z0,Z1] ] ) 
+		xymax = np.max( [ Z.max() for Z in [Y0,X0,X1,Z0,Z1] ] ) 
+		bins = [ np.linspace( xymin , xymax , 100 ) for _ in range(2) ]
+		
+		lH = list()
+		for K in [Y0,X0,X1,Z0,Z1]:
+			H,_,_ = np.histogram2d( K[:,0] , K[:,1] , bins )
+			H /= np.sum(H)
+			H[H == 0] = np.nan
+			vmax = np.nanmax(H)
+			lH.append(H)
+		
+		
+		## Plot
+		cmapR = plt.cm.Reds
+		cmapG = plt.cm.inferno
+		cmapB = plt.cm.Blues
+		nrow,ncol,fs = 2,2,5
+		fig = plt.figure( figsize = (fs*ncol,fs*nrow) )
+		
+		ax = fig.add_subplot( nrow , ncol , 1 )
+		ax.imshow( np.rot90(lH[0]) , cmap = cmapB , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		ax.imshow( np.rot90(lH[1]) , cmap = cmapR , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 2 )
+		ax.imshow( np.rot90(lH[2]) , cmap = cmapR , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 3 )
+		ax.imshow( np.rot90(lH[3]) , cmap = cmapG , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 4 )
+		ax.imshow( np.rot90(lH[4]) , cmap = cmapG , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		plt.show()
+##}}}
+
+def test_MRec( plot = True ):##{{{
+	## Data
+	Y0,X0,X1 = bcd.bimodal_reverse_2d(4000)
+	
+	## Bias Correction
+	mbcn = bc.MRec()
+	mbcn.fit( Y0 , X0 , X1 )
+	Z1 = mbcn.predict(X1)
+	_,Z0 = mbcn.predict(X1,X0)
+	
+	if plot:
+		## Histogram
+		xymin = np.min( [ Z.min() for Z in [Y0,X0,X1,Z0,Z1] ] ) 
+		xymax = np.max( [ Z.max() for Z in [Y0,X0,X1,Z0,Z1] ] ) 
+		bins = [ np.linspace( xymin , xymax , 100 ) for _ in range(2) ]
+		
+		lH = list()
+		for K in [Y0,X0,X1,Z0,Z1]:
+			H,_,_ = np.histogram2d( K[:,0] , K[:,1] , bins )
+			H /= np.sum(H)
+			H[H == 0] = np.nan
+			vmax = np.nanmax(H)
+			lH.append(H)
+		
+		
+		## Plot
+		cmapR = plt.cm.Reds
+		cmapG = plt.cm.inferno
+		cmapB = plt.cm.Blues
+		nrow,ncol,fs = 2,2,5
+		fig = plt.figure( figsize = (fs*ncol,fs*nrow) )
+		
+		ax = fig.add_subplot( nrow , ncol , 1 )
+		ax.imshow( np.rot90(lH[0]) , cmap = cmapB , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		ax.imshow( np.rot90(lH[1]) , cmap = cmapR , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 2 )
+		ax.imshow( np.rot90(lH[2]) , cmap = cmapR , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 3 )
+		ax.imshow( np.rot90(lH[3]) , cmap = cmapG , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		ax = fig.add_subplot( nrow , ncol , 4 )
+		ax.imshow( np.rot90(lH[4]) , cmap = cmapG , vmin = 0  , alpha = 1 , extent = [xymin,xymax,xymin,xymax] )
+		
+		plt.show()
+##}}}
+
+def test_tsbc( plot = True ):##{{{
+	size = 2000
+	
+	## Generate AR3 processes
+	##=======================
+	ar3X = AR( loc = 0.2 , phi = [0.6,-0.2,0.1] , sigma = 1 )
+	X  = np.array( [ ar3X() for _ in range(size) ] )
+	
+	ar3Y = AR( loc = 0 , phi = [-0.3,0.4,-0.2] , sigma = 0.7 )
+	Y  = np.array( [ ar3Y() for _ in range(size) ] ) + 5
+	
+	
+	## Bias correction
+	##================
+	nlags = 50
+	
+	tsbc = bc.TSBC( lag = nlags )
+	tsbc.fit( Y , X )
+	
+	lZ = []
+	for i in range(nlags + 1):
+		tsbc.ref = i
+		lZ.append( tsbc.predict(X) )
+	
+	if plot:
+		## Gaussian kernel
+		##================
+		kde_X = sc.gaussian_kde(X.ravel())
+		kde_Y = sc.gaussian_kde(Y.ravel())
+		lkde_Z = [ sc.gaussian_kde(Z.ravel()) for Z in lZ ]
+		
+		## Plot
+		##=====
+		
+		greens = [c for c in plt.cm.Greens( np.linspace(0.3,0.9,nlags+1) ) ]
+		
+		xmin = min( [T.min() for T in [X,Y] + lZ] )
+		xmax = max( [T.max() for T in [X,Y] + lZ] )
+		delta = (xmax - xmin) / 10
+		xmin -= delta
+		xmax += delta
+		bins = np.linspace( xmin , xmax , 200 )
+		
+		nrow,ncol,fs = 1,2,7
+		fig = plt.figure( figsize = (fs*ncol,fs*nrow) )
+		
+		ax = fig.add_subplot( nrow , ncol , 1 )
+		ax.plot( bins , kde_X(bins) , color = "red" , label = r"$X$" )
+		for i,kde_Z in enumerate(lkde_Z):
+			if i == len(lkde_Z) - 1:
+				ax.plot( bins , kde_Z(bins) , color = greens[i] , label = "OTC" )
+			else:
+				ax.plot( bins , kde_Z(bins) , color = greens[i] )
+		ax.plot( bins , kde_Y(bins) , color = "blue" , marker = "" , label = r"$Y$" )
+		ax.legend( loc = "upper left" )
+		
+		ax = fig.add_subplot( nrow , ncol , 2 )
+		AR.plot_pacf( [X,Y] + lZ , ["red","blue"] + greens , ax = ax , nlags = 7 )
+		
+		fig.set_tight_layout(True)
+		plt.show()
+##}}}
+
+def test_schaake_shuffle( plot = True ):##{{{
+	X = np.random.normal( size = (10,2) )
+	Y = np.random.normal( size = (10,2) )
+	
+	
+	ssr = bct.SchaakeShuffleRef(0,Y)
+	Z = ssr.predict(X)
+	if plot:
+		rX = np.apply_along_axis( sc.rankdata , 0 , X , method = "ordinal" )
+		rY = np.apply_along_axis( sc.rankdata , 0 , Y , method = "ordinal" )
+		rZ = np.apply_along_axis( sc.rankdata , 0 , Z , method = "ordinal" )
+		print(np.hstack( (rX,rY,rZ) ) )
+##}}}
+
 def test_metrics():##{{{
 	X = np.random.multivariate_normal( mean = np.zeros(2) , cov = np.identity(2) , size = 10000 )
 	Y = np.random.multivariate_normal( mean = [5,5]       , cov = np.array( [0.5,-1,-1,2] ).reshape(2,2) , size = 8000 )
@@ -337,11 +660,19 @@ def test_metrics():##{{{
 	m = bcm.minkowski( X   , Y   , p = 3 )
 ##}}}
 
+
+
 def run_all_test( plot = False ):##{{{
 	test_qm(          plot = plot )
 	test_otc_univ(    plot = plot )
 	test_otc_biv(     plot = plot )
-	test_metrics()
+	test_ECBC(        plot = plot )
+	test_qmrs(        plot = plot )
+	test_QDM(         plot = plot )
+	test_MBCn(        plot = plot )
+	test_MRec(        plot = plot )
+#	test_tsbc(        plot = plot )
+#	test_metrics()
 ##}}}
 
 
@@ -354,6 +685,7 @@ if __name__ == "__main__":
 	
 	print(bc.__version__)
 	np.random.seed(42)
+	
 	
 	## Run tests
 	##==========

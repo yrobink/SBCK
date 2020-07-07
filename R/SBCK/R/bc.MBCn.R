@@ -1,4 +1,3 @@
-#!/bin/sh
 
 ##################################################################################
 ##################################################################################
@@ -83,11 +82,218 @@
 ##################################################################################
 ##################################################################################
 
+#' MBCn (Multivariate Bias Correction)
+#'
+#' Perform a multivariate bias correction.
+#'
+#' @docType class
+#' @importFrom R6 R6Class
+#'
+#' @param bc [bias correction methd]
+#'        Non stationary BC method of SBCK, as QDM. Default is QDM
+#' @param metric [function]
+#'        Distance between two distributions. Default is wasserstein.
+#' @param stopping_criteria [R6]
+#'        Class which implement a criteria to stop iterations. See SlopeStoppingCriteria
+#' @param stopping_criteria_params [list]
+#'        Params
+#' @param ... 
+#'        Named arguments passed to bc method
+#' @param Y0  [matrix]
+#'        A matrix containing references during calibration period (time in column, variables in row)
+#' @param X0 [matrix]
+#'        A matrix containing biased data during calibration period (time in column, variables in row)
+#' @param X1 [matrix]
+#'        A matrix containing biased data during projection period (time in column, variables in row)
+#'
+#' @return Object of \code{\link{R6Class}} with methods for bias correction
+#' @format \code{\link{R6Class}} object.
+#'
+#' @section Methods:
+#' \describe{
+#'   \item{\code{new(bin_width,bin_origin,cov_factor)}}{This method is used to create object of this class with \code{MBCn}}
+#'   \item{\code{fit(Y0,X0,X1)}}{Fit the bias correction model from Y0, X0 and X1}.
+#'   \item{\code{predict(X1,X0)}}{Perform the bias correction.}
+#' }
+#' @references Cannon, A. J., Sobie, S. R., and Murdock, T. Q.: Bias correction of simulated precipitation by quantile mapping: how well do methods preserve relative changes in quantiles and extremes?, J. Climate, 28, 6938–6959, https://doi.org/10.1175/JCLI-D-14- 00754.1, 2015.
+#' @examples
+#' ## Three bivariate random variables (rnorm and rexp are inverted between ref and bias)
+#' XY = SBCK::dataset_gaussian_exp_2d(2000)
+#' X0 = XY$X0 ## Biased in calibration period
+#' Y0 = XY$Y0 ## Reference in calibration period
+#' X1 = XY$X1 ## Biased in projection period
+#'
+#' ## Bias correction
+#' ## Step 1 : construction of the class MBCn
+#' mbcn = SBCK::MBCn$new() 
+#' ## Step 2 : Fit the bias correction model
+#' mbcn$fit( Y0 , X0 , X1 )
+#' ## Step 3 : perform the bias correction, Z is a list containing
+#' ## corrections
+#' Z = mbcn$predict(X1,X0) 
+#' Z$Z0 ## Correction in calibration period
+#' Z$Z1 ## Correction in projection period
+#'
+#' @export
+MBCn = R6::R6Class( "MBCn" ,
+	
+	public = list(
+	
+	###############
+	## Arguments ##
+	###############
+	
+	n_features = NULL,
+	bc = NULL,
+	metric = NULL,
+	iter_slope = NULL,
+	bc_params = NULL,
+	ortho_mat = NULL,
+	tips = NULL,
+	lbc = NULL,
+	
+	#################
+	## Constructor ##
+	#################
+	
+	initialize = function( bc = QDM , metric = wasserstein , stopping_criteria = SlopeStoppingCriteria , stopping_criteria_params = list( minit = 20 , maxit = 100 , tol = 1e-3 ) , ... ) ##{{{
+	{
+		self$n_features = NULL
+		self$bc = bc
+		self$metric = metric
+		self$iter_slope = base::do.call( stopping_criteria$new , stopping_criteria_params )
+		self$bc_params = list(...)
+		self$ortho_mat = NULL
+		self$tips = NULL
+		self$lbc = list()
+	},
+	##}}}
+	
+	fit = function( Y0 , X0 , X1 )##{{{
+	{
+		if( !is.matrix(Y0) ) Y0 = base::matrix( Y0 , ncol = 1 , nrow = length(Y0) )
+		if( !is.matrix(X0) ) X0 = base::matrix( X0 , ncol = 1 , nrow = length(X0) )
+		if( !is.matrix(X1) ) X1 = base::matrix( X1 , ncol = 1 , nrow = length(X1) )
+		self$n_features = base::ncol(Y0)
+		
+		self$iter_slope$reset()
+		maxit = self$iter_slope$maxit
+		
+		## Generate orthogonal matrix
+		self$ortho_mat = rorthogonal_group( self$n_features , maxit )
+		
+		## Tips for performance: inverse + ortho of next in one pass
+		self$tips = array( NA , dim = base::dim(self$ortho_mat) )
+		for( i in 1:(maxit-1) )
+			self$tips[,,i] = self$ortho_mat[,,i+1] %*% base::solve(self$ortho_mat[,,i])
+		self$tips[,,maxit] = base::solve(self$ortho_mat[,,maxit])
+		
+		## Init loop
+		Z0_o = base::t(self$ortho_mat[,,1] %*% base::t(X0))
+		Z1_o = base::t(self$ortho_mat[,,1] %*% base::t(X1))
+		
+		## Main loop
+		while(!self$iter_slope$stop)
+		{
+			nit = self$iter_slope$nit
+			Y0_o = base::t(self$ortho_mat[,,nit] %*% base::t(Y0))
+			
+			bc = base::do.call( self$bc$new , self$bc_params )
+			bc$fit( Y0_o , Z0_o , Z1_o )
+			Z = bc$predict(Z1_o,Z0_o)
+			Z1_o = Z$Z1
+			Z0_o = Z$Z0
+			self$lbc[[nit]] = bc
+			
+			self$iter_slope$append(self$metric(Z0_o,Y0_o))
+			
+			Z0_o = base::t(self$tips[,,nit] %*% base::t(Z0_o))
+			Z1_o = base::t(self$tips[,,nit] %*% base::t(Z1_o))
+		}
+		
+		nit = self$iter_slope$nit
+		self$ortho_mat = self$ortho_mat[,,1:nit]
+		self$tips = self$tips[,,1:nit]
+		self$tips[,,nit] = base::solve(self$ortho_mat[,,nit]) 
+		
+		Z0 = base::t(self$tips[,,nit] %*% base::t(Z0_o))
+		Z1 = base::t(self$tips[,,nit] %*% base::t(Z1_o))
+		
+		bc = base::do.call( self$bc$new , self$bc_params )
+		bc$fit( Y0 , Z0 , Z1 )
+		self$lbc[[nit]] = bc
+	},
+	##}}}
+	
+	predict = function( X1 , X0 = NULL ) ##{{{
+	{
+		if( is.null(X0) )
+			return(private$predict_X1(X1))
+		else
+			return(private$predict_X1_X0(X1,X0))
+	
+	}
+	##}}}
+	
+	),
+	
+	private = list(
+	
+	###############
+	## Arguments ##
+	###############
+	
+	
+	#############
+	## Methods ##
+	#############
+	
+	predict_X1 = function(X1) ##{{{
+	{
+		if( !is.matrix(X1) ) X1 = base::matrix( X1 , ncol = 1 , nrow = length(X1) )
+		
+		nit = self$iter_slope$nit
+		
+		Z1_o = base::t(self$ortho_mat[,,1] %*% base::t(X1))
+		
+		for( i in 1:(nit-1) )
+		{
+			Z1_o = self$lbc[[i]]$predict(Z1_o)
+			Z1_o = base::t(self$tips[,,i] %*% base::t(Z1_o))
+		}
+		
+		Z1_o = base::t(self$tips[,,nit] %*% base::t(Z1_o))
+		Z1 = self$lbc[[nit]]$predict(Z1_o)
+		return(Z1)
+		
+	},
+	##}}}
+	
+	predict_X1_X0 = function(X1,X0) ##{{{
+	{
+		if( !is.matrix(X1) ) X1 = base::matrix( X1 , ncol = 1 , nrow = length(X1) )
+		if( !is.matrix(X0) ) X0 = base::matrix( X0 , ncol = 1 , nrow = length(X0) )
+		
+		nit = self$iter_slope$nit
+		
+		Z0_o = base::t(self$ortho_mat[,,1] %*% base::t(X0))
+		Z1_o = base::t(self$ortho_mat[,,1] %*% base::t(X1))
+		
+		for( i in 1:(nit-1) )
+		{
+			Z = self$lbc[[i]]$predict(Z1_o,Z0_o)
+			Z0_o = base::t(self$tips[,,i] %*% base::t(Z$Z0))
+			Z1_o = base::t(self$tips[,,i] %*% base::t(Z$Z1))
+		}
+		
+		Z0_o = base::t(self$tips[,,nit] %*% base::t(Z0_o))
+		Z1_o = base::t(self$tips[,,nit] %*% base::t(Z1_o))
+		Z = self$lbc[[nit]]$predict(Z1_o,Z0_o)
+		return(Z)
+	}
+	##}}}
+	
+	)
+)
 
-rm -f SBCK/NAMESPACE
-rm -f SBCK/man/*.Rd
-rm -f SBCK/R/RcppExports.R
-rm -f SBCK/src/*.so
-rm -f SBCK/src/*.o
-rm -f SBCK/src/RcppExports.cpp
 

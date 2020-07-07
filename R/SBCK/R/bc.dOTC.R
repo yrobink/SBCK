@@ -118,9 +118,10 @@
 #' @references Robin, Y., Vrac, M., Naveau, P., Yiou, P.: Multivariate stochastic bias corrections with optimal transport, Hydrol. Earth Syst. Sci., 23, 773–786, 2019, https://doi.org/10.5194/hess-23-773-2019
 #' @examples
 #' ## Three bivariate random variables (rnorm and rexp are inverted between ref and bias)
-#' X0 = base::cbind( stats::rnorm(2000) , stats::rexp(2000)  )
-#' Y0 = base::cbind( stats::rexp(2000)  , stats::rnorm(2000) )
-#' X1 = base::cbind( stats::rnorm(2000 , mean = 5 ) , stats::rexp(2000)  )
+#' XY = SBCK::dataset_gaussian_exp_2d(2000)
+#' X0 = XY$X0 ## Biased in calibration period
+#' Y0 = XY$Y0 ## Reference in calibration period
+#' X1 = XY$X1 ## Biased in projection period
 #'
 #' ## Bin length
 #' bin_width = c(0.2,0.2)
@@ -130,9 +131,11 @@
 #' dotc = SBCK::dOTC$new( bin_width ) 
 #' ## Step 2 : Fit the bias correction model
 #' dotc$fit( Y0 , X0 , X1 )
-#' ## Step 3 : perform the bias correction, uX1 is the correction of
-#' ## X1 with respect to the estimation of Y1
-#' uX1 = dotc$predict(X1) 
+#' ## Step 3 : perform the bias correction, Z is a list containing
+#' ## corrections
+#' Z = dotc$predict(X1,X0) 
+#' Z$Z0 ## Correction in calibration period
+#' Z$Z1 ## Correction in projection period
 #'
 #' @export
 dOTC = R6::R6Class( "dOTC" ,
@@ -144,6 +147,8 @@ dOTC = R6::R6Class( "dOTC" ,
 	###############
 	## Arguments ##
 	###############
+	
+	
 	
 	#################
 	## Constructor ##
@@ -168,18 +173,18 @@ dOTC = R6::R6Class( "dOTC" ,
 		## Bin width
 		if( is.null(self$bin_width) )
 		{
-			self$bin_width = SBCK::common_bin_width_estimator( list(Y0,X0,X1) )
+			self$bin_width = SBCK::bin_width_estimator( list(Y0,X0,X1) )
 		}
 		if( is.null(self$bin_origin) )
 		{
 			self$bin_origin = base::rep( 0. , length(self$bin_width) )
 		}
 		
-		Dim = dim(Y0)[2]
+		self$n_features = base::ncol(Y0)
 		
 		## Correction factor of motion
 		cf = NULL
-		if( Dim == 1 && !is.numeric(private$cov_factor) )
+		if( self$n_features == 1 && !is.numeric(private$cov_factor) )
 		{
 			cf = sd(Y0) * sd(X0)^(-1)
 		}
@@ -198,13 +203,13 @@ dOTC = R6::R6Class( "dOTC" ,
 			}
 		}
 		## Motion
-		otcB0R0 = SBCK::OTC$new( self$bin_width , self$bin_origin ) ## Bias
+		private$otcB0R0 = SBCK::OTC$new( self$bin_width , self$bin_origin ) ## Bias
 		otcB0B1 = SBCK::OTC$new( self$bin_width , self$bin_origin ) ## Evolution
-		otcB0R0$fit( Y0 , X0 )
+		private$otcB0R0$fit( Y0 , X0 )
 		otcB0B1$fit( X1 , X0 )
 		
 		motion = otcB0B1$predict(X0) - X0
-		if( Dim == 1 )
+		if( self$n_features == 1 )
 		{
 			motion = cf * motion
 		}
@@ -214,9 +219,21 @@ dOTC = R6::R6Class( "dOTC" ,
 		}
 		
 		## Estimation of Y1
-		Y1 = otcB0R0$predict( X0 ) + motion
+		Y1 = private$otcB0R0$predict( X0 ) + motion
 		
 		super$fit( Y1 , X1 )
+	},
+	
+	predict = function( X1 , X0 = NULL )
+	{
+		Z1 = super$predict(X1)
+		
+		if( !is.null(X0) )
+		{
+			Z0 = private$otcB0R0$predict(X0)
+			return( list( Z1 = Z1 , Z0 = Z0 ) )
+		}
+		return(Z1)
 	}
 	
 	),
@@ -232,6 +249,7 @@ dOTC = R6::R6Class( "dOTC" ,
 	## Arguments ##
 	###############
 	
+	otcB0R0 = NULL ,
 	cov_factor = NULL
 	)
 )

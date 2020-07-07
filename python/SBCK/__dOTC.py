@@ -145,26 +145,27 @@ class dOTC:
 		Parameters
 		----------
 		bin_width  : np.array[ shape = (n_features) ] or None
-			Lenght of bins, see Apyga.stats.SparseHist. If None, bin_width is estimated during fit.
+			Lenght of bins, see SBCK.tools.SparseHist. If None, bin_width is estimated during fit.
 		bin_origin : np.array[ shape = (n_features) ] or None
-			Corner of one bin, see Apyga.stats.SparseHist. If None, np.repeat( 0 , n_features ) is used.
+			Corner of one bin, see SBCK.tools.SparseHist. If None, np.repeat( 0 , n_features ) is used.
 		cov_factor : str or np.array[ shape = (n_features,n_features) ]
 			Correction factor during transfer of the evolution between X0 and X1 to Y0
 				"cholesky" => compute the cholesky factor
 				"std"      => compute the standard deviation factor
 				other str  => identity is used
 		ot         : OT*Solver*
-			A solver for Optimal transport, default is OTSinkhornLogDual()
+			A solver for Optimal transport, default is SBCK.tools.OTNetworkSimplex()
 		
 		Attributes
 		----------
-		planX1Y1   : Apyga.stats.bc.OTC
+		otc   : SBCK.OTC
 			OTC corrector between X1 and the estimation of Y1
 		"""
 		self._cov_factor_str = cov_factor
 		self._cov_factor = None if type(cov_factor) == str else cov_factor
 		self.bin_width  = bin_width
 		self.bin_origin = bin_origin
+		self._otcX0Y0   = None
 		self.otc         = None
 		self._ot         = ot
 	##}}}
@@ -184,9 +185,9 @@ class dOTC:
 		"""
 		## Set the covariance factor correction
 		
-		if Y0.ndim == 1: Y0 = Y0.reshape( (Y0.size,1) )
-		if X0.ndim == 1: X0 = X0.reshape( (X0.size,1) )
-		if X1.ndim == 1: X1 = X1.reshape( (X1.size,1) )
+		if Y0.ndim == 1: Y0 = Y0.reshape(-1,1)
+		if X0.ndim == 1: X0 = X0.reshape(-1,1)
+		if X1.ndim == 1: X1 = X1.reshape(-1,1)
 		
 		if self._cov_factor is None:
 			if self._cov_factor_str in ["std" , "cholesky"]:
@@ -214,6 +215,8 @@ class dOTC:
 		otcX0X1 = OTC( self.bin_width , self.bin_origin , ot = self._ot )
 		otcY0X0.fit( X0 , Y0 )
 		otcX0X1.fit( X1 , X0 )
+		self._otcX0Y0 = OTC( self.bin_width , self.bin_origin , ot = self._ot )
+		self._otcX0Y0.fit(Y0,X0)
 		
 		## Estimation of Y1
 		yX0 = otcY0X0.predict(Y0)
@@ -227,21 +230,30 @@ class dOTC:
 		self.otc.fit( Y1 , X1 )
 	##}}}
 	
-	def predict( self , X1 ):##{{{
+	def predict( self , X1 , X0 = None ):##{{{
 		"""
 		Perform the bias correction
+		Return Z1 if X0 is None, else return a tuple Z1,Z0
 		
 		Parameters
 		----------
-		X1  : np.array[ shape = (size,dimension) ]
-			Array of value to be corrected
+		X1  : np.array[ shape = (n_samples,n_features) ]
+			Array of value to be corrected in projection period
+		X0  : np.array[ shape = (n_samples,n_features) ] or None
+			Array of value to be corrected in calibration period
 		
 		Returns
 		-------
-		uX1 : np.array[ shape = (size,dimension) ]
-			Return an array of correction
+		Z1 : np.array[ shape = (n_sample,n_features) ]
+			Return an array of correction in projection period
+		Z0 : np.array[ shape = (n_sample,n_features) ] or None
+			Return an array of correction in calibration period
 		"""
-		return self.otc.predict( X1 )
+		Z1 = self.otc.predict( X1 )
+		if X0 is not None:
+			Z0 = self._otcX0Y0.predict(X0)
+			return Z1,Z0
+		return Z1
 	##}}}
 	
 

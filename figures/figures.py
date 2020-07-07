@@ -92,6 +92,7 @@
 import numpy as np
 import scipy.stats as sc
 import SBCK as bc
+import SBCK.datasets as bcd
 
 ## Plot libraries ##
 ##==================
@@ -111,186 +112,138 @@ from mpl_toolkits.mplot3d import axes3d
 ## Fonctions ##
 ###############
 
-def fig_qm_cdft():##{{{
+
+def fig_univariate():##{{{
 	
 	## Construction of biased and reference dataset
-	size = 10000
-	dsize = 7500
+	Y0,X0,X1 = bcd.gaussian_exp_mixture_1d(10000)
 	
-	X0 = np.random.normal( loc = 7 , scale = 1 , size = (size,1) )
-	
-	X1 = np.zeros( (size,1) )
-	X1[:(size-dsize),:] = np.random.normal( loc = 5 , scale = 1 , size = (size-dsize,1) )
-	X1[(size-dsize):,:] = np.random.normal( loc = 9 , scale = 1 , size = (dsize,1) )
-	
-	Y0 = np.zeros( (size,1) )
-	Y0[:dsize,:] = np.random.exponential( scale = 1 , size =  (dsize,1) )
-	Y0[dsize:,:] = np.random.normal( loc = 10 , scale = 1 , size = (size-dsize,1) )
-	
-	## Construction of corrector for period 0
-	qm = bc.QM()
-	qm.fit(Y0,X0)
-	
-	## Correction of period 0
-	Z0 = qm.predict(X0)
-	
-	## Construction of corrector for period 1
+	## Bias correction with CDFt
 	cdft = bc.CDFt()
 	cdft.fit( Y0 , X0 , X1 )
+	Z1,Z0 = cdft.predict( X1 , X0 )
+	Z1[Z1<0] = 0
 	
-	## Correction of period 1
-	Z1 = cdft.predict(X1)
+	## Bias correction with QDM
+	qdm = bc.QDM( "multiplicative" )
+	qdm.fit( Y0 , X0 , X1 )
+	Z1qdm = qdm.predict(X1)
 	
 	## Random Variable
 	bins = np.arange( -1 , 14 , 0.1 )
 	rvY0 = sc.rv_histogram( np.histogram( Y0 , bins ) )
 	rvX0 = sc.rv_histogram( np.histogram( X0 , bins ) )
 	rvX1 = sc.rv_histogram( np.histogram( X1 , bins ) )
-	rvUX0 = sc.rv_histogram( np.histogram( Z0 , bins ) )
-	rvUX1 = sc.rv_histogram( np.histogram( Z1 , bins ) )
+	rvZ0 = sc.rv_histogram( np.histogram( Z0 , bins ) )
+	rvZ1 = sc.rv_histogram( np.histogram( Z1 , bins ) )
+	rvZ1qdm = sc.rv_histogram( np.histogram( Z1qdm , bins ) )
 	
 	## Plot
-	bins = cdft.bins[0]
+	xmin = min( [T.min() for T in [Y0,X0,X1,Z0,Z1,Z1qdm]] )
+	xmax = max( [T.max() for T in [Y0,X0,X1,Z0,Z1,Z1qdm]] )
+	xd   = 0.05 * (xmax - xmin)
+	ylim = (0,0.8)
+	
+	bins = np.linspace( xmin - xd , xmax + xd , 80 )
 	fig_factor = 0.3
 	fig = plt.figure( figsize = ( fig_factor * 30 , fig_factor * 20) )
 	
 	ax = fig.add_subplot( 2 , 3 , 1 )
 	ax.hist( X0 , bins = bins , color = "red" , density = True , alpha = 0.5 )
-	ax.set_ylim( (0,0.8) )
+	ax.set_ylim( ylim )
 	ax.set_title( r"$X_0$" )
 	
 	ax = fig.add_subplot( 2 , 3 , 2 )
-	ax.hist( Z0 , bins = bins , color = "green" , density = True , alpha = 0.5 )
-	ax.set_ylim( (0,0.8) )
+	ax.hist( Z0 , bins = bins , color = "green" , density = True , alpha = 0.5 , label = "QM" )
+	ax.set_ylim( ylim )
 	ax.set_title( r"$Z_0$" )
+	ax.legend( loc = "upper right" )
 	
 	ax = fig.add_subplot( 2 , 3 , 3 )
 	ax.hist( Y0 , bins = bins , color = "blue" , density = True , alpha = 0.5 )
-	ax.set_ylim( (0,0.8) )
+	ax.set_ylim( ylim )
 	ax.set_title( r"$Y_0$" )
 	
 	ax = fig.add_subplot( 2 , 3 , 4 )
 	ax.hist( X1 , bins = bins , color = "red" , density = True , alpha = 0.5 )
-	ax.set_ylim( (0,0.8) )
+	ax.set_ylim( ylim )
 	ax.set_title( r"$X_1$" )
 	
 	ax = fig.add_subplot( 2 , 3 , 5 )
-	ax.hist( Z1 , bins = bins , color = "green" , density = True , alpha = 0.5 )
-	ax.set_ylim( (0,0.8) )
+	ax.hist( Z1    , bins = bins , color = "green"  , density = True , alpha = 0.5 , label = "CDFt" )
+	ax.hist( Z1qdm , bins = bins , color = "orange" , density = True , alpha = 0.5 , label = "QDM" )
+	ax.set_ylim( ylim )
 	ax.set_title( r"$Z_1$" )
+	ax.legend( loc = "upper right" )
 	
 	ax = fig.add_subplot( 2 , 3 , 6 )
-	ax.plot( bins , rvY0.cdf(bins)  , color = "blue"  , label = r"$Y_0$" )
-	ax.plot( bins , rvX0.cdf(bins)  , color = "red"   , label = r"$X_0$" )
-	ax.plot( bins , rvX1.cdf(bins)  , color = "red"   , linestyle = "--" , label = r"$X_1$" )
-	ax.plot( bins , rvUX0.cdf(bins) , color = "green" , label = r"$Z_0$" )
-	ax.plot( bins , rvUX1.cdf(bins) , color = "green" , linestyle = "--" , label = r"$Z_1$" )
-	ax.legend( loc = "upper left" )
+	ax.plot( bins , rvY0.cdf(bins)    , color = "blue"   , label = r"$Y_0$" )
+	ax.plot( bins , rvX0.cdf(bins)    , color = "red"    , label = r"$X_0$" )
+	ax.plot( bins , rvX1.cdf(bins)    , color = "red"    , label = r"$X_1$" , linestyle = "--" )
+	ax.plot( bins , rvZ0.cdf(bins)    , color = "green"  , label = r"$Z_0$" )
+	ax.plot( bins , rvZ1.cdf(bins)    , color = "green" , label  = r"$Z_1$ (CDFt)" , linestyle = "--" )
+	ax.plot( bins , rvZ1qdm.cdf(bins) , color = "orange" , label = r"$Z_1$ (QDM)"  , linestyle = "--" )
+	ax.legend( loc = "lower right" , fontsize = 8 , ncol = 1 )
 	ax.set_title( "CDF" )
 	
 	fig.set_tight_layout(True)
-	plt.savefig( "qm_cdft.png" )
+	plt.savefig( "univariate.png" )
 ##}}}
 
-def fig_otc_dotc():##{{{
-	## Construction of X0 (biased period 0), X1 (biased period 1) and Y0 (reference period 0)
-	factor = 10
-	size   = factor * 2000
-	sized0 = factor * 1000
-	sized1 = factor * 1500
+def fig_multivariate():##{{{
 	
-	## Just a gaussian for X0
-	X0 = np.random.multivariate_normal( mean = [0.,0.] , cov = np.identity(2) , size = size )
-	Y = np.zeros( (size,2) )
+	Y0,X0,X1 = bcd.gaussian_L_2d(10000)
 	
-	## A lightly complex gaussian for X1
-	X1 = np.random.multivariate_normal( mean = [1.,2.] , cov = [ [2.,0] , [0,0.5] ] , size = size )
+	lbcm    = [ bc.dOTC                                          , bc.MBCn , bc.MRec ]
+	lkwargs = [ {"bin_width" : [0.1,0.1] , "cov_factor" : "std"} , {} , {}]
+	lname   = ["dOTC"                                            , "MBCn","MRec"]
 	
-	## A very complex law for Y0
-	Y[:sized0,:] = np.random.multivariate_normal( mean = [7.,7.] , cov = np.array( [2,0,0,0.5] ).reshape( (2,2) ) , size = sized0 )
-	Y[sized0:sized1,:] = np.random.multivariate_normal( mean = [5.,9.] , cov = np.array( [0.5,0,0,2] ).reshape( (2,2) ) , size = (sized1-sized0) )
-	Y[sized1:] = np.random.multivariate_normal( mean = [5.,12.5] , cov = 0.2 * np.identity(2) , size = (size-sized1) )
-	meanY = np.mean( Y , axis = 0 )
-	meanX = np.mean( X0 , axis = 0 )
-	Y = np.apply_along_axis( lambda x : x - meanY + meanX , 1 , Y )
+	for bcm,kwargs,name in zip(lbcm,lkwargs,lname):
 	
-	## Construction of corrector period0
-	otc = bc.OTC( bin_width = [ 0.1 , 0.1 ] )
-	otc.fit( Y , X0 )
-	
-	## Correction period0
-	Z0 = otc.predict(X0)
-	
-	## Construction of corrector period1
-	cov_factor = "std"
-#	cov_factor = "cholesky"
-#	cov_factor = "identity"
-	dotc = bc.dOTC( bin_width = [0.1,0.1] , cov_factor = cov_factor )
-	dotc.fit( Y , X0 , X1 )
-	
-	## Correction period1
-	Z1 = dotc.predict(X1)
-	
-	## Pearson correlation
-	pY,_   = sc.spearmanr( Y[:,0] , Y[:,1] )
-	pX0,_  = sc.spearmanr( X0[:,0] , X0[:,1] )
-	pX1,_  = sc.spearmanr( X1[:,0] , X1[:,1] )
-	pUX0,_ = sc.spearmanr( Z0[:,0] , Z0[:,1] )
-	pUX1,_ = sc.spearmanr( Z1[:,0] , Z1[:,1] )
-	
-	## Histogram for plot
-	bins = [ np.arange( -6 , 10 , 0.1 ) for i in range(2) ]
-	extent = [-8,8,-8,8]
-	
-	HX0,_,_ = np.histogram2d( X0[:,0] , X0[:,1] , bins = bins )
-	HX0 = HX0 / np.sum(HX0)
-	HX0[HX0 == 0] = np.nan
-	
-	HX1,_,_ = np.histogram2d( X1[:,0] , X1[:,1] , bins = bins )
-	HX1 = HX1 / np.sum(HX1)
-	HX1[HX1 == 0] = np.nan
-	
-	HY,_,_ = np.histogram2d( Y[:,0] , Y[:,1] , bins = bins )
-	HY = HY / np.sum(HY)
-	HY[HY == 0] = np.nan
-	
-	HZ0,_,_ = np.histogram2d( Z0[:,0] , Z0[:,1] , bins = bins )
-	HZ0 = HZ0 / np.sum(HZ0)
-	HZ0[HZ0 == 0] = np.nan
-	
-	HZ1,_,_ = np.histogram2d( Z1[:,0] , Z1[:,1] , bins = bins )
-	HZ1 = HZ1 / np.sum(HZ1)
-	HZ1[HZ1 == 0] = np.nan
-	
-	vmin = min( [ np.nanmin(X) for X in [ HX0 , HY , HZ0 ] ] )
-	vmax = max( [ np.nanmax(X) for X in [ HX0 , HY , HZ0 ] ] )
-	
-	## Plot
-	fig_factor = 0.3
-	fig = plt.figure( figsize = ( fig_factor * 30 , fig_factor * 20) )
-	
-	ax = fig.add_subplot( 2 , 3 , 1 )
-	ax.imshow( np.rot90(HX0) , cmap = plt.cm.inferno , extent = extent , vmin = vmin , vmax = vmax )
-	ax.set_title( r"$X_0$" )
-	
-	ax = fig.add_subplot( 2 , 3 , 2 )
-	ax.imshow( np.rot90(HZ0) , cmap = plt.cm.inferno , extent = extent , vmin = vmin , vmax = vmax )
-	ax.set_title( r"$Z_0$" )
-	
-	ax = fig.add_subplot( 2 , 3 , 3 )
-	ax.imshow( np.rot90(HY) , cmap = plt.cm.inferno , extent = extent , vmin = vmin , vmax = vmax )
-	ax.set_title( r"$Y_0$" )
-	
-	ax = fig.add_subplot( 2 , 3 , 4 )
-	ax.imshow( np.rot90(HX1) , cmap = plt.cm.inferno , extent = extent , vmin = vmin , vmax = vmax )
-	ax.set_title( r"$X_1$" )
-	
-	ax = fig.add_subplot( 2 , 3 , 5 )
-	ax.imshow( np.rot90(HZ1) , cmap = plt.cm.inferno , extent = extent , vmin = vmin , vmax = vmax )
-	ax.set_title( r"$Z_1$" )
-	
-	fig.set_tight_layout(True)
-	plt.savefig( "otc_dotc.png" )
+		## Bias correction
+		met = bcm( **kwargs )
+		met.fit( Y0 , X0 , X1 )
+		Z1,Z0 = met.predict(X1,X0)
+		
+		xylim0 = -10
+		xylim1 = 10
+		X,Y = np.mgrid[xylim0:xylim1:100j, xylim0:xylim1:100j]
+		pos = np.vstack( [X.ravel(),Y.ravel()] )
+		cmapX = plt.cm.Reds
+		cmapY = plt.cm.Blues
+		cmapZ = plt.cm.Greens
+		
+		## Plot
+		fig_factor = 0.3
+		fig = plt.figure( figsize = ( fig_factor * 30 , fig_factor * 20) )
+		
+		ax = fig.add_subplot( 2 , 3 , 1 )
+		kde = sc.gaussian_kde(X0.T)
+		ax.imshow( np.rot90(kde(pos).reshape(X.shape)) , cmap = cmapX , extent = [xylim0,xylim1,xylim0,xylim1] )
+		ax.set_title( r"$X_0$" )
+		
+		ax = fig.add_subplot( 2 , 3 , 2 )
+		kde = sc.gaussian_kde(Z0.T)
+		ax.imshow( np.rot90(kde(pos).reshape(X.shape)) , cmap = cmapZ , extent = [xylim0,xylim1,xylim0,xylim1] )
+		ax.set_title( r"$Z_0$ (" + name + ")" )
+		
+		ax = fig.add_subplot( 2 , 3 , 3 )
+		kde = sc.gaussian_kde(Y0.T)
+		ax.imshow( np.rot90(kde(pos).reshape(X.shape)) , cmap = cmapY , extent = [xylim0,xylim1,xylim0,xylim1] )
+		ax.set_title( r"$Y_0$" )
+		
+		ax = fig.add_subplot( 2 , 3 , 4 )
+		kde = sc.gaussian_kde(X1.T)
+		ax.imshow( np.rot90(kde(pos).reshape(X.shape)) , cmap = cmapX , extent = [xylim0,xylim1,xylim0,xylim1] )
+		ax.set_title( r"$X_1$" )
+		
+		ax = fig.add_subplot( 2 , 3 , 5 )
+		kde = sc.gaussian_kde(Z1.T)
+		ax.imshow( np.rot90(kde(pos).reshape(X.shape)) , cmap = cmapZ , extent = [xylim0,xylim1,xylim0,xylim1] )
+		ax.set_title( r"$Z_1$ (" + name + ")" )
+		
+		fig.set_tight_layout(True)
+		plt.savefig( "multivariate_" + name + ".png" )
 ##}}}
 
 def fig_sparsehist():##{{{
@@ -315,9 +268,8 @@ def fig_sparsehist():##{{{
 ##########
 
 if __name__ == "__main__":
-	fig_qm_cdft()
-	fig_otc_dotc()
-	fig_sparsehist()
+	fig_univariate()
+	fig_multivariate()
 	
 	print("Done")
 

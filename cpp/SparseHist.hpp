@@ -188,10 +188,10 @@ struct SparseHist
 	std::string repr()//{{{
 	{
 		std::string _repr("") ;
-		_repr += "Apyga.stats.SparseHist\n" ;
-		_repr += "======================\n" ;
-		_repr += "* size:" + std::to_string(m_size) + "\n" ;
-		_repr += "* dim :" + std::to_string(m_dim)  + "\n" ;
+		_repr += "SBCK::SparseHist\n" ;
+		_repr += "================\n" ;
+		_repr += "* n_samples :" + std::to_string(m_size) + "\n" ;
+		_repr += "* n_features:" + std::to_string(m_dim)  + "\n" ;
 		return _repr ;
 	}
 	//}}}

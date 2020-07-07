@@ -115,50 +115,52 @@
 #' @docType class
 #' @importFrom R6 R6Class
 #'
-#' @param bin_width [list of vector of NULL]
-#'        A vector of bin_width (length of a bin)
-#'        If NULL, it is estimating during the fit
+#' @param ...
+#'        Many named arguments listed below
+#' @param distX0 [A ROOPSD_ distribution or a list of them]
+#'        Describe the law of each margins. A list permit to use different laws for each margins. Default is rv_histogram.
+#' @param distY0 [A ROOPSD_ distribution or a list of them]
+#'        Describe the law of each margins. A list permit to use different laws for each margins. Default is rv_histogram.
+#' @param distX1 [A ROOPSD_ distribution or a list of them]
+#'        Describe the law of each margins. A list permit to use different laws for each margins. Default is rv_histogram.
+#' @param distY1 [A ROOPSD_ distribution or a list of them]
+#'        Describe the law of each margins. A list permit to use different laws for each margins. Default is rv_histogram.
+#' @param n_features  [NULL or integer]
+#'        Normaly infered during fit, but if distX0, distX1 and distY0 are simultaneously frozen, must be set during initialization.
 #' @param Y0  [matrix]
-#'        A matrix containing references during calibration period (time in column, variables in row)
+#'        A matrix containing references during calibration period
 #' @param X0 [matrix]
-#'        A matrix containing biased data during calibration period (time in column, variables in row)
+#'        A matrix containing biased data during calibration period
 #' @param X1 [matrix]
-#'        A matrix containing biased data during projection period (time in column, variables in row)
+#'        A matrix containing biased data during projection period
 #'
 #' @return Object of \code{\link{R6Class}} with methods for bias correction
 #' @format \code{\link{R6Class}} object.
 #'
 #' @section Methods:
 #' \describe{
-#'   \item{\code{new(bins)}}{This method is used to create object of this class with \code{CDFt}}
+#'   \item{\code{new(...)}}{This method is used to create object of this class with \code{CDFt}}
 #'   \item{\code{fit(Y0,X0,X1)}}{Fit the bias correction model from Y0 and X0 and X1}.
-#'   \item{\code{predict(X1)}}{Perform the bias correction of X1 with respect to the estimaton of Y1.}.
+#'   \item{\code{predict(X1,X0)}}{Perform the bias correction of X1 with respect to the estimaton of Y1.}.
 #' }
 #' @references Michelangeli, P.-A., Vrac, M., and Loukos, H.: Probabilistic downscaling approaches: Application to wind cumulative distribution functions, Geophys. Res. Lett., 36, L11708, https://doi.org/10.1029/2009GL038401, 2009.
 #' @examples
 #' ## Three bivariate random variables (rnorm and rexp are inverted between ref and bias)
-#' X0 = matrix( NA , nrow = 10000 , ncol = 2 )
-#' X1 = matrix( NA , nrow = 10000 , ncol = 2 )
-#' Y0 = matrix( NA , nrow = 10000 , ncol = 2 )
-#' X0[,1] = rnorm( 10000 )
-#' X0[,2] = rexp( 10000 )
-#' X1[,1] = rnorm( 10000 , mean = 2 )
-#' X1[,2] = rexp( 10000 ) + 2
-#' Y0[,1] = rexp( 10000 )
-#' Y0[,2] = rnorm( 10000 )
-#'
-#' ## Bin length
-#' bin_width = c(0.1,0.1)
+#' XY = SBCK::dataset_gaussian_exp_2d(2000)
+#' X0 = XY$X0 ## Biased in calibration period
+#' Y0 = XY$Y0 ## Reference in calibration period
+#' X1 = XY$X1 ## Biased in projection period
 #'
 #' ## Bias correction
 #' ## Step 1 : construction of the class CDFt 
-#' cdft = SBCK::CDFt$new( bin_width ) 
+#' cdft = SBCK::CDFt$new() 
 #' ## Step 2 : Fit the bias correction model
 #' cdft$fit( Y0 , X0 , X1 )
-#' ## Step 3 : perform the bias correction, uX1 is the correction of
-#' ## X1 with respect to the estimation of Y1
-#' uX1 = cdft$predict(X1) 
-#'
+#' ## Step 3 : perform the bias correction, Z is a list containing
+#' ## corrections
+#' Z = cdft$predict(X1,X0) 
+#' Z$Z0 ## Correction in calibration period
+#' Z$Z1 ## Correction in projection period
 #' @export
 CDFt = R6::R6Class( "CDFt" ,
 	
@@ -169,66 +171,125 @@ CDFt = R6::R6Class( "CDFt" ,
 	###############
 	
 	n_features = 0,
-	bins = list(),
-	bin_width = NULL,
-	dev = NULL,
+	tol        = 1e-3,
+	
+	distY0 = NULL,
+	distY1 = NULL,
+	distX0 = NULL,
+	distX1 = NULL,
 	
 	
 	#################
 	## Constructor ##
 	#################
 	
-	initialize = function( bin_width = NULL )
+	initialize = function(...) ##{{{
 	{
-		self$bin_width = bin_width
+		kwargs = list(...)
+		self$distY0 = DistHelper$new( dist = kwargs[["distY0"]] , kwargs = kwargs[["kwargsY0"]] )
+		self$distY1 = DistHelper$new( dist = kwargs[["distY1"]] , kwargs = kwargs[["kwargsY1"]] )
+		self$distX0 = DistHelper$new( dist = kwargs[["distX0"]] , kwargs = kwargs[["kwargsX0"]] )
+		self$distX1 = DistHelper$new( dist = kwargs[["distX1"]] , kwargs = kwargs[["kwargsX1"]] )
+		self$n_features = kwargs[["n_features"]]
+		self$tol        = if( !is.null(kwargs[["tol"]]) ) kwargs[["tol"]] else 1e-3
 	},
+	##}}}
 	
 	fit = function( Y0 , X0 , X1 )##{{{
 	{
 		## Dimension and data formating
-		if( class(Y0) == "numeric" )
-		{
-			Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
-		}
-		if( class(X0) == "numeric" )
-		{
-			X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
-		}
-		if( class(X1) == "numeric" )
-		{
-			X1 = matrix( X1 , nrow = length(X1) , ncol = 1 )
-		}
-		self$n_features = dim(X0)[2]
+		##=============================
+		if( class(Y0) == "numeric" ) Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
+		if( class(X0) == "numeric" ) X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
+		if( class(X1) == "numeric" ) X1 = matrix( X1 , nrow = length(X1) , ncol = 1 )
 		
-		## Bins
-		if( is.null(self$bin_width) )
+		## Set features
+		##=============
+		if( is.null(self$n_features ) )
 		{
-			self$bin_width = common_bin_width_estimator( list(Y0,X0,X1) )
+			if( !is.null(Y0) )
+				self$n_features = base::ncol(Y0)
+			else if( !is.null(X0) )
+				self$n_features = base::ncol(X0)
+			else if( !is.null(X1) )
+				self$n_features = base::ncol(X1)
+			else
+				base::stop("SBCK::CDFt: If Y0 == X0 == X1 == NULL, n_features must be set during initialization")
 		}
+		self$distY0$set_features(self$n_features)
+		self$distY1$set_features(self$n_features)
+		self$distX0$set_features(self$n_features)
+		self$distX1$set_features(self$n_features)
 		
-		## Random variable
-		private$diff = base::rep( NA , self$n_features )
-		self$dev = base::rep( 1 , self$n_features )
+		
+		## Start fit itself
+		##=================
 		for( i in 1:self$n_features )
 		{
-			private$cdft_fit( Y0[,i] , X0[,i] , X1[,i] , i )
+			self$distY0$fit( Y0[,i] , i )
+			self$distX0$fit( X0[,i] , i )
+			self$distX1$fit( X1[,i] , i )
+			
+			if( self$distY1$is_frozen(i) )
+			{
+				self$distY1$law[[i]] = self$distY1$dist[[i]]
+			}
+			else
+			{
+				Y1 = NULL
+				if( self$distY0$is_parametric(i) && self$distX0$is_parametric(i) && self$distX1$is_parametric(i) )
+				{
+					Y1 = self$distX1$law[[i]]$icdf( self$distX0$law[[i]]$cdf( self$distY0$law[[i]]$icdf( self$distX1$law[[i]]$cdf( X1[,i] ) ) ) )
+				}
+				else
+				{
+					Y0uni = if( is.null(Y0) ) self$distY0$law[[i]]$rvs(10000) else Y0[,i]
+					X0uni = if( is.null(X0) ) self$distX0$law[[i]]$rvs(10000) else X0[,i]
+					X1uni = if( is.null(X1) ) self$distX1$law[[i]]$rvs(10000) else X1[,i]
+					Y1 = private$infer_Y1( Y0uni , X0uni , X1uni , i ) ## infer Y1 here
+				}
+				self$distY1$fit( Y1 , i )
+			}
 		}
 	},
 	##}}}
 	
-	predict = function( X1 )##{{{
+	predict = function( X1 , X0 = NULL )##{{{
 	{
-		if( class(X1) == "numeric" )
+		if( class(X0) == "numeric" ) X0 = matrix( X0 , nrow = length(X1) , ncol = 1 )
+		if( class(X1) == "numeric" ) X1 = matrix( X1 , nrow = length(X1) , ncol = 1 )
+		
+		if( is.null(X0) )
 		{
-			X1 = matrix( X1 , nrow = length(X1) , ncol = 1 )
+			Z1 = matrix( NA , nrow = base::nrow(X1) , ncol = base::ncol(X1) )
+			for( i in 1:self$n_features )
+			{
+				cdf = self$distX1$law[[i]]$cdf( X1[,i] )
+				cdf[!(cdf < 1)] = 1-self$tol
+				cdf[!(cdf > 0)] = self$tol
+				Z1[,i] = self$distY1$law[[i]]$icdf( cdf )
+			}
+			return(Z1)
+		}
+		else
+		{
+			Z0 = matrix( NA , nrow = base::nrow(X0) , ncol = base::ncol(X0) )
+			Z1 = matrix( NA , nrow = base::nrow(X1) , ncol = base::ncol(X1) )
+			for( i in 1:self$n_features )
+			{
+				cdf = self$distX0$law[[i]]$cdf( X0[,i] )
+				cdf[!(cdf < 1)] = 1-self$tol
+				cdf[!(cdf > 0)] = self$tol
+				Z0[,i] = self$distY0$law[[i]]$icdf( cdf )
+				
+				cdf = self$distX1$law[[i]]$cdf( X1[,i] )
+				cdf[!(cdf < 1)] = 1-self$tol
+				cdf[!(cdf > 0)] = self$tol
+				Z1[,i] = self$distY1$law[[i]]$icdf( cdf )
+			}
+			return( list( Z1 = Z1 , Z0 = Z0 ) )
 		}
 		
-		Z1 = matrix( NA , nrow = dim(X1)[1] , ncol = self$n_features )
-		for( i in 1:self$n_features )
-		{
-			 
-			Z1[,i] = private$qmX1Y1[[i]]$predict( X1[,i] + private$diff[i] )
-		}
 		return(Z1)
 	}##}}}
 	
@@ -239,13 +300,14 @@ CDFt = R6::R6Class( "CDFt" ,
 	## Private elements ##
 	######################
 	
-	private = list(
+	private = list(##{{{
 	
 	###############
 	## Arguments ##
 	###############
 	
 	qmX1Y1 = list(),
+	qmX0Y0 = NULL,
 	diff = NULL,
 	
 	
@@ -253,43 +315,40 @@ CDFt = R6::R6Class( "CDFt" ,
 	## Methods ##
 	#############
 	
-	cdft_fit = function( Y0 , X0 , X1 , idx ) ##{{{
+	infer_Y1 = function( Y0 , X0 , X1 , idx )##{{{
 	{
-		## Center data on mean(Y0)
-		private$diff[idx] = base::mean(Y0) - base::mean(X0)
-		X0c = X0 + private$diff[idx]
-		X1c = X1 + private$diff[idx]
+		mY0 = base::mean(Y0)
+		mX0 = base::mean(X0)
 		
-		## Some parameters
-		m = base::abs( base::mean(X1) - base::mean(X0) )
-		s = stats::sd(X1) / stats::sd(X0)
-		s = if( s < 1 ) 1 else s
+		X0s = X0 + mY0 - mX0
+		X1s = X1 + mY0 - mX0
 		
-		## Global loop
+		rvY0 = self$distY0$law[[idx]]
+		rvX0 = base::do.call( self$distX0$dist[[idx]]$new , self$distX0$kwargs )
+		rvX0$fit(X0s)
+		rvX1 = base::do.call( self$distX1$dist[[idx]]$new , self$distX1$kwargs )
+		rvX1$fit(X1s)
+		
+		xdiff = base::abs( base::mean(X1) - base::mean(X0) )
+		xdev = 2
 		dev_ok = FALSE
-		cdfY1 = NULL
+		
 		while( !dev_ok )
 		{
-			## Bins
-			Min = base::min(Y0,X0,X1,X0c,X1c) - m * s * self$dev[idx]
-			Max = base::max(Y0,X0,X1,X0c,X1c) + m * s * self$dev[idx]
-			self$bins[[idx]] = base::seq( Min - self$bin_width[idx] , Max + self$bin_width[idx] , self$bin_width[idx] )
+			dev_ok = TRUE
+			xmin = base::min(Y0,X0,X1) - xdev * xdiff
+			xmax = base::max(Y0,X0,X1) + xdev * xdiff
 			
-			## Random variable
-			rvY0 = SBCK::rv_histogram$new( Y0  , self$bins[[idx]] )
-			rvX0 = SBCK::rv_histogram$new( X0c , self$bins[[idx]] )
-			rvX1 = SBCK::rv_histogram$new( X1c , self$bins[[idx]] )
+			x = base::seq( xmin , xmax , length = 200 )
+			cdfY0 = rvY0$cdf(x)
+			cdfX0 = rvX0$cdf(x)
+			cdfX1 = rvX1$cdf(x)
+			cdfY1 = rvY0$cdf(rvX0$icdf(cdfX1))
 			
-			## First estimation
-			cdfY0 = rvY0$cdf( self$bins[[idx]] )
-			cdfY1 = rvY0$cdf( rvX0$icdf( rvX1$cdf( self$bins[[idx]] ) ) )
-			
-			## Correction of left part
-			if( base::min(Y0) < base::min(X1c) )
+			if( base::min(Y0) < base::min(X1s) )
 			{
-				Y0q = stats::quantile( Y0 , probs = cdfY1[1] , names = FALSE )
-				i = base::max( base::which( self$bins[[idx]] <= Y0q ) )
-				j = base::max( base::which( self$bins[[idx]] < base::min(X1c) ) )
+				i = base::max( base::which( x < rvY0$icdf(cdfY1[1]) ) )
+				j = base::max( base::which( x < base::min(X1s) ) )
 				if( i < j )
 				{
 					cdfY1[(j-i+1):j] = cdfY0[1:i]
@@ -301,47 +360,32 @@ CDFt = R6::R6Class( "CDFt" ,
 				}
 			}
 			
-			## Correction of right part
-			kk = base::which( cdfY1 == 1. )
-			k = if( length(kk) > 0 ) base::min(kk) else length(cdfY1)
-			if( (base::abs(cdfY1[k] - cdfY1[k-1]) > 1. / length(self$bins[[idx]]) ) || k == length(cdfY1) )
+			if( cdfY1[base::length(cdfY1)] < 1 )
 			{
-				Y0q = stats::quantile( Y0 , probs = cdfY1[k-1] , names = FALSE )
-				i = base::min( base::which( Y0q <= self$bins[[idx]] ) )
-				j = base::min( base::which( cdfY1 == cdfY1[k] ) )
-				
+				i = base::max( base::which( x < rvY0$icdf(cdfY1[length(cdfY1)]) ) )
+				j = base::min( base::which( cdfY1[1:(length(cdfY1)-1)] == cdfY1[length(cdfY1)] ) )
 				if( j > 0 )
 				{
-					diff = length(self$bins[[idx]]) - base::max(i,j)
-					cdfY1[j:(j+diff)] = cdfY0[i:(i+diff)]
-					if( j + diff < length(self$bins[[idx]]) )
-					{
-						cdfY1[(j+diff):length(cdfY1)] = 1.
-					}
-					dev_ok = TRUE
+					dif = min( length(x) - j , length(x) - i )
+					cdfY1[j:(j+dif)] = cdfY0[i:(i+dif)]
+					if( j + dif < length(x) ) cdfY1[(j+dif):length(cdfY1)] = 1.
 				}
 				else
 				{
-					self$dev[idx] = 2 * self$dev[idx]
+					dev_ok = FALSE
+					xdev = 2 * xdev
 				}
 			}
-			else
-			{
-				dev_ok = TRUE
-			}
 		}
-		## Final estimator of Y1
-		pY1 = base::diff(cdfY1)
-		size = length(self$bins[[idx]])
-		cY1 = (self$bins[[idx]][2:size] + self$bins[[idx]][1:(size-1)]) / 2.
-		Y1 = cY1[ base::sample( length(cY1) , length(X1) , replace = TRUE , prob = pY1 ) ]
 		
-		## Quantile Mapping corrector
-		private$qmX1Y1[[idx]] = SBCK::QM$new( list(self$bins[[idx]]) )
-		private$qmX1Y1[[idx]]$fit( Y1 , X1c )
+		cdfY1_fct = approxfun( cdfY1 , x )
+		Y1 = cdfY1_fct( stats::runif( n = 10000 , min = base::min(cdfY1) , max = base::max(cdfY1) ) )
+		
+		return(Y1)
 	}
 	##}}}
 	
 	)
+	##}}}
 )
 

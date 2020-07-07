@@ -232,14 +232,15 @@ ext_modules = [
 list_packages = [
 	"SBCK",
 	"SBCK.tools",
-	"SBCK.metrics"
+	"SBCK.metrics",
+	"SBCK.datasets"
 ]
 
 
 setup(
 	name = "SBCK" ,
 	description = "Statistical Bias Correction Kit" ,
-	version = "0.1.2" ,
+	version = "0.2.2" ,
 	author = "Yoann Robin" ,
 	author_email = "yoann.robin.k@gmail.com" ,
 	license = "CeCILL-C" ,

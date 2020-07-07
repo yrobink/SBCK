@@ -195,12 +195,13 @@ test_pairwise_distances = function( show = FALSE )##{{{
 }
 ##}}}
 
-test_rv_histogram = function( show = FALSE )##{{{
+test_Empirical = function( show = FALSE )##{{{
 {
 	X = stats::rnorm( n = 10000 )
 	
-	rvX = SBCK::rv_histogram$new(X)
-	
+	rvX = SBCK::ROOPSD_rv_histogram$new()
+	rvX$fit( X )
+
 	## RVS
 	X2 = rvX$rvs(10000)
 	
@@ -219,12 +220,12 @@ test_rv_histogram = function( show = FALSE )##{{{
 		plt$new_screen()
 		graphics::par( mfrow = base::c( 2 , 3 ) )
 		
-		graphics::plot( x , cdf  , col = "red" , main = "CDF" )
-		graphics::plot( x , sf   , col = "red" , main = "sf" )
+		graphics::plot( x , cdf  , col = "red" , type = "l" , main = "CDF" )
+		graphics::plot( x , sf   , col = "red" , type = "l" , main = "sf" )
 		graphics::hist( X , col = grDevices::rgb( 0 , 0 , 1 , 0.5 ) , freq = FALSE )
 		graphics::lines( density(X)  , col = "red" )
-		graphics::plot( p , icdf , col = "red" , main = "iCDF" )
-		graphics::plot( p , isf  , col = "red" , main = "isf" )
+		graphics::plot( p , icdf , col = "red" , type = "l" , main = "iCDF" )
+		graphics::plot( p , isf  , col = "red" , type = "l" , main = "isf" )
 		graphics::hist( X2 , col = grDevices::rgb( 0 , 0 , 1 , 0.5 ) , freq = FALSE )
 		graphics::lines( density(X2)  , col = "red" )
 		
@@ -271,6 +272,46 @@ test_OT = function( show = FALSE )##{{{
 }
 ##}}}
 
+test_shuffle = function( show = FALSE )##{{{
+{
+	X0 = matrix( stats::runif(30) , nrow = 10 , ncol = 3 )
+	Y0 = matrix( stats::runif(30) , nrow = 10 , ncol = 3 )
+	
+	ssr = SBCK::SchaakeShuffleRef$new( ref = 1 )
+	ssr$fit(Y0)
+	Z0 = ssr$predict(X0)
+	
+	rank_X0 = base::apply( X0 , 2 , base::rank )
+	rank_Y0 = base::apply( Y0 , 2 , base::rank )
+	rank_Z0 = base::apply( Z0 , 2 , base::rank )
+	
+	if(show)
+	{
+		cat( "Test shuffle\n" )
+		print( base::cbind( rank_X0 , rank_Y0 , rank_Z0 ) )
+	}
+}
+##}}}
+
+test_shift = function( show = FALSE )##{{{
+{
+	X = base::t(matrix( 1:20 , nrow = 2 , ncol = 10 ))
+	
+	sh = SBCK::Shift$new( 1 , method = "row" )
+	Xs = sh$transform(X)
+	Xi = sh$inverse(Xs)
+	
+	if(show)
+	{
+		cat( "Test Shift\n" )
+		print(X)
+		print(Xs)
+		print(Xi)
+	}
+}
+##}}}
+
+
 ## Test metrics
 ##=============
 
@@ -314,9 +355,10 @@ test_metrics = function( show = FALSE )##{{{
 
 test_qm = function( show = FALSE )##{{{
 {
-	X0 = stats::rnorm( n = 2000 , mean = 0 , sd = 1   )
-	X1 = stats::rnorm( n = 2001 , mean = 5 , sd = 2   )
-	Y0 = stats::rnorm( n = 2002 , mean = 2 , sd = 0.5 )
+	XY = SBCK::dataset_gaussian_exp_mixture_1d(2000)
+	X0 = XY$X0
+	X1 = XY$X1
+	Y0 = XY$Y0
 	
 	qm = SBCK::QM$new()
 	qm$fit( Y0 , X0 )
@@ -324,7 +366,137 @@ test_qm = function( show = FALSE )##{{{
 	
 	cdft = SBCK::CDFt$new()
 	cdft$fit( Y0 , X0 , X1 )
-	Z1 = cdft$predict( X1 )
+	Z1 = cdft$predict(X1)
+	
+	if(show)
+	{
+		plt$new_screen()
+		
+		
+		g0 = ggplot2::ggplot() + ggplot2::aes( x = x )
+		g0 = g0 + ggplot2::geom_histogram( binwidth = 0.1 , aes( y = ..density.. ) , data = data.frame(x = X0) , color = "red"  , alpha = 0.5 )
+		g0 = g0 + ggplot2::geom_histogram( binwidth = 0.1 , aes( y = ..density.. ) , data = data.frame(x = Y0) , color = "blue" , alpha = 0.5 )
+		g0 = g0 + ggplot2::ggtitle( "Calibration" )
+		
+		g1 = ggplot2::ggplot() + ggplot2::aes( x = x )
+		g1 = g1 + ggplot2::geom_histogram( binwidth = 0.1 , aes( y = ..density.. ) , data = data.frame(x = X0) , color = "red"   , alpha = 0.5 )
+		g1 = g1 + ggplot2::geom_histogram( binwidth = 0.1 , aes( y = ..density.. ) , data = data.frame(x = Z0) , color = "green" , alpha = 0.5 )
+		g1 = g1 + ggplot2::ggtitle( "QM" )
+		
+		g2 = ggplot2::ggplot() + ggplot2::aes( x = x )
+		g2 = g2 + ggplot2::geom_histogram( binwidth = 0.1 , aes( y = ..density.. ) , data = data.frame(x = X0) , color = "red"  , alpha = 0.5 )
+		g2 = g2 + ggplot2::geom_histogram( binwidth = 0.1 , aes( y = ..density.. ) , data = data.frame(x = Y0) , color = "blue" , alpha = 0.5 )
+		g2 = g2 + ggplot2::ggtitle( "Calibration" )
+		
+		g3 = ggplot2::ggplot() + ggplot2::aes( x = x )
+		g3 = g3 + ggplot2::geom_histogram( binwidth = 0.1 , aes( y = ..density.. ) , data = data.frame(x = X1) , color = "red"   , alpha = 0.5 )
+		g3 = g3 + ggplot2::geom_histogram( binwidth = 0.1 , aes( y = ..density.. ) , data = data.frame(x = Z1) , color = "green" , alpha = 0.5 )
+		g3 = g3 + ggplot2::ggtitle( "CDFt" )
+		
+		g = gridExtra::grid.arrange( g0 , g1 , g2 , g3 , ncol = 2 , nrow = 2 )
+		
+		graphics::plot(g)
+	}
+}
+##}}}
+
+test_ECBC = function( show = FALSE )##{{{
+{
+	XY = SBCK::dataset_bimodal_reverse_2d(2000)
+	X0 = XY$X0
+	X1 = XY$X1
+	Y0 = XY$Y0
+	
+	ecbc = SBCK::ECBC$new()
+	ecbc$fit( Y0 , X0 , X1 )
+	Z1 = ecbc$predict(X1)
+	Z0 = ecbc$predict(X1,X0)$Z0
+	
+	if(show)
+	{
+		plt$new_screen()
+		
+		g0 = ggplot2::ggplot( data.frame( x = X0[,1] , y = X0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g0 = g0 + ggplot2::geom_point( color = "red" )
+		g0 = g0 + ggplot2::ggtitle( "X0" )
+		
+		g1 = ggplot2::ggplot( data.frame( x = Y0[,1] , y = Y0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g1 = g1 + ggplot2::geom_point( color = "blue" )
+		g1 = g1 + ggplot2::ggtitle( "Y0" )
+		
+		g2 = ggplot2::ggplot( data.frame( x = Z0[,1] , y = Z0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g2 = g2 + ggplot2::geom_point( color = "green" )
+		g2 = g2 + ggplot2::ggtitle( "Z0" )
+		
+		g3 = ggplot2::ggplot( data.frame( x = X1[,1] , y = X1[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g3 = g3 + ggplot2::geom_point( color = "red" )
+		g3 = g3 + ggplot2::ggtitle( "X1" )
+		
+		g5 = ggplot2::ggplot( data.frame( x = Z1[,1] , y = Z1[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g5 = g5 + ggplot2::geom_point( color = "green" )
+		g5 = g5 + ggplot2::ggtitle( "Z1" )
+		
+		
+		g = gridExtra::grid.arrange( g0 , g1 , g2 , g3 , ggplot2::ggplot() , g5 , ncol = 3 , nrow = 2 )
+		graphics::plot(g)
+	}
+}
+##}}}
+
+test_qmrs = function( show = FALSE )##{{{
+{
+	XY = SBCK::dataset_bimodal_reverse_2d(2000)
+	X0 = XY$X0
+	X1 = XY$X1
+	Y0 = XY$Y0
+	
+	r2d2 = SBCK::R2D2$new()
+	r2d2$fit( Y0 , X0 , X1 )
+	Z1 = r2d2$predict(X1)
+	Z0 = r2d2$predict(X1,X0)$Z0
+	
+	if(show)
+	{
+		plt$new_screen()
+		
+		g0 = ggplot2::ggplot( data.frame( x = X0[,1] , y = X0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g0 = g0 + ggplot2::geom_point( color = "red" )
+		g0 = g0 + ggplot2::ggtitle( "X0" )
+		
+		g1 = ggplot2::ggplot( data.frame( x = Y0[,1] , y = Y0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g1 = g1 + ggplot2::geom_point( color = "blue" )
+		g1 = g1 + ggplot2::ggtitle( "Y0" )
+		
+		g2 = ggplot2::ggplot( data.frame( x = Z0[,1] , y = Z0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g2 = g2 + ggplot2::geom_point( color = "green" )
+		g2 = g2 + ggplot2::ggtitle( "Z0" )
+		
+		g3 = ggplot2::ggplot( data.frame( x = X1[,1] , y = X1[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g3 = g3 + ggplot2::geom_point( color = "red" )
+		g3 = g3 + ggplot2::ggtitle( "X1" )
+		
+		g5 = ggplot2::ggplot( data.frame( x = Z1[,1] , y = Z1[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g5 = g5 + ggplot2::geom_point( color = "green" )
+		g5 = g5 + ggplot2::ggtitle( "Z1" )
+		
+		
+		g = gridExtra::grid.arrange( g0 , g1 , g2 , g3 , ggplot2::ggplot() , g5 , ncol = 3 , nrow = 2 )
+		graphics::plot(g)
+	}
+}
+##}}}
+
+test_otc_univ = function( show = FALSE )##{{{
+{
+	XY = SBCK::dataset_gaussian_exp_mixture_1d(2000)
+	X0 = XY$X0
+	X1 = XY$X1
+	Y0 = XY$Y0
+	
+	dotc = SBCK::dOTC$new()
+	dotc$fit( Y0 , X0 , X1 )
+	Z1 = dotc$predict(X1)
+	Z0 = dotc$predict( X1 , X0 )$Z0
 	
 	if(show)
 	{
@@ -360,17 +532,15 @@ test_qm = function( show = FALSE )##{{{
 
 test_otc = function( show = FALSE )##{{{
 {
-	X0 = base::cbind( stats::rnorm(2000) , stats::rexp(2000)  )
-	Y0 = base::cbind( stats::rexp(2000)  , stats::rnorm(2000) )
-	X1 = base::cbind( stats::rnorm(2000 , mean = 5 ) , stats::rexp(2000)  )
+	XY = SBCK::dataset_bimodal_reverse_2d(2000)
+	X0 = XY$X0
+	X1 = XY$X1
+	Y0 = XY$Y0
 	
-	otc = SBCK::OTC$new()
-	otc$fit( Y0 , X0 )
-	Z0 = otc$predict(X0)
-	
-	dotc = SBCK::dOTC$new( cov_factor = "cholesky" )
+	dotc = SBCK::dOTC$new()
 	dotc$fit( Y0 , X0 , X1 )
 	Z1 = dotc$predict(X1)
+	Z0 = dotc$predict(X1,X0)$Z0
 	
 	if( show )
 	{
@@ -402,6 +572,164 @@ test_otc = function( show = FALSE )##{{{
 }
 ##}}}
 
+test_MRec = function( show = FALSE )##{{{
+{
+	XY = SBCK::dataset_bimodal_reverse_2d(2000)
+	X0 = XY$X0
+	X1 = XY$X1
+	Y0 = XY$Y0
+	
+	mrec = SBCK::MRec$new()
+	mrec$fit( Y0 , X0 , X1 )
+	Z1 = mrec$predict(X1)
+	Z0 = mrec$predict(X1,X0)$Z0
+	
+	
+	if( show )
+	{
+		plt$new_screen()
+		
+		g0 = ggplot2::ggplot( data.frame( x = X0[,1] , y = X0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g0 = g0 + ggplot2::geom_point( color = "red" )
+		g0 = g0 + ggplot2::ggtitle( "X0" )
+		
+		g1 = ggplot2::ggplot( data.frame( x = Y0[,1] , y = Y0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g1 = g1 + ggplot2::geom_point( color = "blue" )
+		g1 = g1 + ggplot2::ggtitle( "Y0" )
+		
+		g2 = ggplot2::ggplot( data.frame( x = Z0[,1] , y = Z0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g2 = g2 + ggplot2::geom_point( color = "green" )
+		g2 = g2 + ggplot2::ggtitle( "Z0" )
+		
+		g3 = ggplot2::ggplot( data.frame( x = X1[,1] , y = X1[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g3 = g3 + ggplot2::geom_point( color = "red" )
+		g3 = g3 + ggplot2::ggtitle( "X1" )
+		
+		g5 = ggplot2::ggplot( data.frame( x = Z1[,1] , y = Z1[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g5 = g5 + ggplot2::geom_point( color = "green" )
+		g5 = g5 + ggplot2::ggtitle( "Z1" )
+		
+		g = gridExtra::grid.arrange( g0 , g1 , g2 , g3 , ggplot2::ggplot() , g5 , ncol = 3 , nrow = 2 )
+		graphics::plot(g)
+	}
+}
+##}}}
+
+test_QDM = function( show = FALSE )##{{{
+{
+	XY = SBCK::dataset_bimodal_reverse_2d(2000)
+	X0 = XY$X0
+	X1 = XY$X1
+	Y0 = XY$Y0
+	
+	qdm = SBCK::QDM$new()
+	qdm$fit( Y0 , X0 , X1 )
+	Z1 = qdm$predict(X1)
+	Z0 = qdm$predict(X1,X0)$Z0
+	
+	
+	if( show )
+	{
+		plt$new_screen()
+		
+		g0 = ggplot2::ggplot( data.frame( x = X0[,1] , y = X0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g0 = g0 + ggplot2::geom_point( color = "red" )
+		g0 = g0 + ggplot2::ggtitle( "X0" )
+		
+		g1 = ggplot2::ggplot( data.frame( x = Y0[,1] , y = Y0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g1 = g1 + ggplot2::geom_point( color = "blue" )
+		g1 = g1 + ggplot2::ggtitle( "Y0" )
+		
+		g2 = ggplot2::ggplot( data.frame( x = Z0[,1] , y = Z0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g2 = g2 + ggplot2::geom_point( color = "green" )
+		g2 = g2 + ggplot2::ggtitle( "Z0" )
+		
+		g3 = ggplot2::ggplot( data.frame( x = X1[,1] , y = X1[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g3 = g3 + ggplot2::geom_point( color = "red" )
+		g3 = g3 + ggplot2::ggtitle( "X1" )
+		
+		g5 = ggplot2::ggplot( data.frame( x = Z1[,1] , y = Z1[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g5 = g5 + ggplot2::geom_point( color = "green" )
+		g5 = g5 + ggplot2::ggtitle( "Z1" )
+		
+		g = gridExtra::grid.arrange( g0 , g1 , g2 , g3 , ggplot2::ggplot() , g5 , ncol = 3 , nrow = 2 )
+		graphics::plot(g)
+	}
+}
+##}}}
+
+test_MBCn = function( show = FALSE )##{{{
+{
+	XY = SBCK::dataset_bimodal_reverse_2d(2000)
+	X0 = XY$X0
+	X1 = XY$X1
+	Y0 = XY$Y0
+	
+	mbcn = SBCK::MBCn$new()
+	mbcn$fit( Y0 , X0 , X1 )
+	Z1 = mbcn$predict(X1)
+	Z0 = mbcn$predict(X1,X0)$Z0
+	
+	
+	if( show )
+	{
+		plt$new_screen()
+		
+		g0 = ggplot2::ggplot( data.frame( x = X0[,1] , y = X0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g0 = g0 + ggplot2::geom_point( color = "red" )
+		g0 = g0 + ggplot2::ggtitle( "X0" )
+		
+		g1 = ggplot2::ggplot( data.frame( x = Y0[,1] , y = Y0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g1 = g1 + ggplot2::geom_point( color = "blue" )
+		g1 = g1 + ggplot2::ggtitle( "Y0" )
+		
+		g2 = ggplot2::ggplot( data.frame( x = Z0[,1] , y = Z0[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g2 = g2 + ggplot2::geom_point( color = "green" )
+		g2 = g2 + ggplot2::ggtitle( "Z0" )
+		
+		g3 = ggplot2::ggplot( data.frame( x = X1[,1] , y = X1[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g3 = g3 + ggplot2::geom_point( color = "red" )
+		g3 = g3 + ggplot2::ggtitle( "X1" )
+		
+		
+		nit = mbcn$iter_slope$nit - 1
+		g4 = ggplot2::ggplot() + ggplot2::geom_line( ggplot2::aes( x = 1:nit , y = mbcn$iter_slope$criteria[1:nit] ) )
+		g4 = g4 + ggplot2::ggtitle( "MBCn convergence" ) + ggplot2::labs( x = "Iterations" , y = "Wasserstein" )
+		
+		g5 = ggplot2::ggplot( data.frame( x = Z1[,1] , y = Z1[,2] ) , ggplot2::aes( x = x , y = y ) )
+		g5 = g5 + ggplot2::geom_point( color = "green" )
+		g5 = g5 + ggplot2::ggtitle( "Z1" )
+		
+		g = gridExtra::grid.arrange( g0 , g1 , g2 , g3 , g4 , g5 , ncol = 3 , nrow = 2 )
+		graphics::plot(g)
+	}
+}
+##}}}
+
+test_tsbc = function( show = FALSE )##{{{
+{
+	X0 = as.vector( stats::arima.sim( n = 2000 , model = list( ar = base::c(  0.6 , 0.2 , -0.1 ) ) , rand.gen = function(n) { return(stats::rnorm( n , mean = 0.2 , sd = 1   )) } )     )
+	Y0 = as.vector( stats::arima.sim( n = 2000 , model = list( ar = base::c( -0.3 , 0.4 , -0.2 ) ) , rand.gen = function(n) { return(stats::rnorm( n , mean = 0   , sd = 0.7 )) } ) + 5 )
+	
+	tsbc = SBCK::TSBC$new( 30 )
+	tsbc$fit( Y0 , X0 )
+	Z0 = tsbc$predict(X0)
+	
+	
+	if( show )
+	{
+		cat( "Test TSBC\n" )
+		PACF = matrix( NA , nrow = 10 , ncol = 3 )
+		colnames(PACF) = base::c( "X" , "Z" , "Y" )
+		PACF[,1] = stats::pacf( X0 , lag.max = 10 , plot = FALSE )$acf
+		PACF[,2] = stats::pacf( Z0 , lag.max = 10 , plot = FALSE )$acf
+		PACF[,3] = stats::pacf( Y0 , lag.max = 10 , plot = FALSE )$acf
+		
+		print(PACF)
+	}
+}
+##}}}
+
 
 ## All in one
 ##===========
@@ -410,16 +738,25 @@ run_all_tests = function( show = FALSE )##{{{
 {
 	## Tools tests
 	test_pairwise_distances(show)
-	test_rv_histogram(show)
+	test_Empirical(show)
 	test_SparseHist(show)
 	test_OT(show)
+	test_shuffle(show)
+	test_shift(show)
 	
 	## Metrics tests
 	test_metrics(show)
 	
 	## BC tests
 	test_qm(show)
+	test_ECBC(show)
+	test_qmrs(show)
+	test_otc_univ(show)
 	test_otc(show)
+	test_MRec(show)
+	test_QDM(show)
+	test_MBCn(show)
+	test_tsbc(show)
 }
 ##}}}
 
@@ -428,6 +765,7 @@ run_all_tests = function( show = FALSE )##{{{
 ##########
 ## main ##
 ##########
+
 
 ## Read command line arguments and run (or not) tests
 ##================================================{{{

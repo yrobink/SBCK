@@ -96,10 +96,10 @@
 #'        Coordinate of lower corner of one cell. If NULL, c(0,...,0) is used
 #' @param ot [OTSolver]
 #'        Optimal Transport solver, default is the network simplex
-#' @param Y  [matrix]
-#'        A matrix containing references (row = n_samples, col = n_features)
-#' @param X [matrix]
-#'        A matrix containing biased data (row = n_samples, col = n_features)
+#' @param Y0  [matrix]
+#'        A matrix containing references during calibration period (time in column, variables in row)
+#' @param X0 [matrix]
+#'        A matrix containing biased data during calibration period (time in column, variables in row)
 #'
 #' @return Object of \code{\link{R6Class}} with methods for bias correction
 #' @format \code{\link{R6Class}} object.
@@ -113,20 +113,21 @@
 #' @references Robin, Y., Vrac, M., Naveau, P., Yiou, P.: Multivariate stochastic bias corrections with optimal transport, Hydrol. Earth Syst. Sci., 23, 773–786, 2019, https://doi.org/10.5194/hess-23-773-2019
 #' @examples
 #' ## Two bivariate random variables (rnorm and rexp are inverted between ref and bias)
-#' X0 = base::cbind( stats::rnorm(2000) , stats::rexp(2000)  )
-#' Y0 = base::cbind( stats::rexp(2000)  , stats::rnorm(2000) )
+#' XY = SBCK::dataset_gaussian_exp_2d(2000)
+#' X0 = XY$X0 ## Biased in calibration period
+#' Y0 = XY$Y0 ## Reference in calibration period
 #'
 #' ## Bin length
-#' bin_width = SBCK::common_bin_width_estimator( list(X0,Y0) )
+#' bin_width = SBCK::bin_width_estimator( list(X0,Y0) )
 #'
 #' ## Bias correction
 #' ## Step 1 : construction of the class OTC 
 #' otc = SBCK::OTC$new( bin_width ) 
 #' ## Step 2 : Fit the bias correction model
 #' otc$fit( Y0 , X0 )
-#' ## Step 3 : perform the bias correction, uX is the correction of
-#' ## X with respect to the estimation of Y
-#' uX0 = otc$predict(X0) 
+#' ## Step 3 : perform the bias correction, Z0 is the correction of
+#' ## X0 with respect to the estimation of Y0
+#' Z0 = otc$predict(X0)
 #'
 #' @importFrom R6 R6Class
 #' @export
@@ -146,7 +147,7 @@ OTC = R6::R6Class( "OTC" ,
 	muY = NULL,
 	ot  = NULL,
 	plan = NULL,
-	
+	n_features = NULL,
 	
 	#################
 	## Constructor ##
@@ -159,40 +160,41 @@ OTC = R6::R6Class( "OTC" ,
 		self$ot = ot
 	},
 	
-	fit = function( Y , X )
+	fit = function( Y0 , X0 )
 	{
 		## Dimension and data formating
-		if( class(Y) == "numeric" )
-			Y = matrix( Y , nrow = length(Y) , ncol = 1 )
-		if( class(X) == "numeric" )
-			X = matrix( X , nrow = length(X) , ncol = 1 )
+		if( class(Y0) == "numeric" )
+			Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
+		if( class(X0) == "numeric" )
+			X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
+		self$n_features = base::ncol(Y0)
 		
 		if( is.null(self$bin_width) )
 		{
-			self$bin_width = SBCK::common_bin_width_estimator( list(X,Y) )
+			self$bin_width = SBCK::bin_width_estimator( list(X0,Y0) )
 		}
 		if( is.null(self$bin_origin) )
 		{
 			self$bin_origin = base::rep( 0. , length(self$bin_width) )
 		}
 		
-		self$muX = SBCK::SparseHist( X , self$bin_width , self$bin_origin )
-		self$muY = SBCK::SparseHist( Y , self$bin_width , self$bin_origin )
+		self$muX = SBCK::SparseHist( X0 , self$bin_width , self$bin_origin )
+		self$muY = SBCK::SparseHist( Y0 , self$bin_width , self$bin_origin )
 		self$ot$fit( self$muX , self$muY )
 		
 		self$plan = base::t(base::apply( base::t(self$ot$plan) , 2 , function(x) { x / base::sum(x) } ))
 	},
 	
-	predict = function( X )
+	predict = function( X0 )
 	{
-		if( class(X) == "numeric" )
-			X = matrix( X , nrow = length(X) , ncol = 1 )
+		if( class(X0) == "numeric" )
+			X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
 		
-		arg_X = matrix( self$muX$argwhere(X) , nrow = dim(X)[1] , ncol = 1 )
+		arg_X = matrix( self$muX$argwhere(X0) , nrow = base::nrow(X0) , ncol = 1 )
 		n_samples = self$muY$n_samples
 		arg_Y = base::apply( arg_X , 1 , function(x) { base::sample( 1:n_samples , 1 , prob = self$plan[x,] ) } )
 		
-		invisible(self$muY$c[arg_Y,])
+		return(self$muY$c[arg_Y,]) 
 	}
 	
 	),

@@ -83,12 +83,17 @@
 ##################################################################################
 ##################################################################################
 
-__version__ = "0.1.2"
+__version__ = "0.2.2"
 
+from .__RBC   import RBC
 from .__QM    import QM
 from .__CDFt  import CDFt
 from .__OTC   import OTC
 from .__dOTC  import dOTC
-
-
+from .__ECBC  import ECBC
+from .__QMrs  import QMrs
+from .__R2D2  import R2D2
+from .__QDM   import QDM
+from .__MBCn  import MBCn
+from .__MRec  import MRec
 

@@ -111,7 +111,8 @@ def _to_SparseHist( func ):
 			muYY = SparseHist( muY , muX.bin_width )
 			return func( muX , muYY , **kwargs )
 		elif not testX and not testY:
-			bw = np.array( [bin_width_estimator([muX,muY])] ).squeeze()
+			bw = np.array( [bin_width_estimator([muX,muY])] )
+			bw = bw.reshape(bw.size)
 			muXX = SparseHist( muX , bw )
 			muYY = SparseHist( muY , bw )
 			return func( muXX , muYY , **kwargs )

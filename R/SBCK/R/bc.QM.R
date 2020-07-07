@@ -82,129 +82,154 @@
 ##################################################################################
 ##################################################################################
 
+
 #' Quantile Mapping method
 #'
-#' Perform an univariate bias correction of X with respect to Y (correction is applied margins by margins).
+#' Perform an univariate bias correction of X0 with respect to Y0 (correction is applied margins by margins).
 #'
 #' @docType class
 #' @importFrom R6 R6Class
 #'
-#' @param bins [list of vector of NULL]
-#'        A list of bins for each margins.
-#'        If NULL, it is estimating during the fit
-#' @param Y  [matrix]
-#'        A matrix containing references (nrow = n_samples, ncol = n_features)
-#' @param X [matrix]
-#'        A matrix containing biased data (nrow = n_samples, ncol = n_features)
+#' @param distX0 [A ROOPSD_ distribution or a list of them]
+#'        Describe the law of each margins. A list permit to use different laws for each margins. Default is empirical.
+#' @param distY0 [A ROOPSD_ distribution or a list of them]
+#'        Describe the law of each margins. A list permit to use different laws for each margins. Default is empirical.
+#' @param ...
+#'        Others optional named arguments:
+#' @param n_features  [integer]
+#'        Normaly infered during fit, but if distX0 and distY are simultaneously frozen, must be set during initialization.
+#' @param kwargsX0  [list]
+#'        Arguments passed to distX0
+#' @param kwargsY0  [list]
+#'        Arguments passed to distY0
+#' @param Y0  [matrix]
+#'        A matrix containing references during calibration period (time in column, variables in row)
+#' @param X0 [matrix]
+#'        A matrix containing biased data during calibration period (time in column, variables in row)
 #'
 #' @return Object of \code{\link{R6Class}} with methods for bias correction
 #' @format \code{\link{R6Class}} object.
 #'
 #' @section Methods:
 #' \describe{
-#'   \item{\code{new(bins)}}{This method is used to create object of this class with \code{QM}}
-#'   \item{\code{fit(Y,X)}}{Fit the bias correction model from Y and X}.
-#'   \item{\code{predict(X)}}{Perform the bias correction of X with respect to Y.}.
+#'   \item{\code{new(distX0,distY0,...)}}{This method is used to create object of this class with \code{QM}}
+#'   \item{\code{fit(Y0,X0)}}{Fit the bias correction model from Y0 and X0}.
+#'   \item{\code{predict(X0)}}{Perform the bias correction of X0 with respect to Y0.}.
 #' }
 #' @references Panofsky, H. A. and Brier, G. W.: Some applications of statistics to meteorology, Mineral Industries Extension Services, College of Mineral Industries, Pennsylvania State University, 103 pp., 1958.
 #' @references Wood, A. W., Leung, L. R., Sridhar, V., and Lettenmaier, D. P.: Hydrologic Implications of Dynamical and Statistical Approaches to Downscaling Climate Model Outputs, Clim. Change, 62, 189–216, https://doi.org/10.1023/B:CLIM.0000013685.99609.9e, 2004.
 #' @references Déqué, M.: Frequency of precipitation and temperature extremes over France in an anthropogenic scenario: Model results and statistical correction according to observed values, Global Planet. Change, 57, 16–26, https://doi.org/10.1016/j.gloplacha.2006.11.030, 2007.
 #' @examples
-#' ## Two bivariate random variables (rnorm and rexp are inverted between ref and bias)
-#' Y = base::cbind( rnorm(10000) , rexp(10000)  )
-#' X = base::cbind( rexp(10000)  , rnorm(10000) )
+#' ## Three bivariate random variables (rnorm and rexp are inverted between ref and bias)
+#' XY = SBCK::dataset_gaussian_exp_2d(2000)
+#' X0 = XY$X0 ## Biased in calibration period
+#' Y0 = XY$Y0 ## Reference in calibration period
 #'
 #' ## Bias correction
 #' ## Step 1 : construction of the class QM 
 #' qm = SBCK::QM$new() 
 #' ## Step 2 : Fit the bias correction model
-#' qm$fit( Y , X )
-#' ## Step 3 : perform the bias correction, uX is the correction of
-#' ## X with respect to the estimation of Y
-#' uX = qm$predict(X) 
+#' qm$fit( Y0 , X0 )
+#' ## Step 3 : perform the bias correction, Z0 is the correction of
+#' ## X0 with respect to the estimation of Y0
+#' Z0 = qm$predict(X0)
 #'
+#' # ## But in fact the laws are known, we can fit parameters:
+#' distY0 = list( ROOPSD_Exponential , ROOPSD_Normal )
+#' distX0 = list( ROOPSD_Normal , ROOPSD_Exponential )
+#' qm_fix = SBCK::QM$new( distY0 = distY0 , distX0 = distX0 )
+#' qm_fix$fit( Y0 , X0 )
+#' Z0 = qm_fix$predict(X0) 
 #' @export
-QM = R6::R6Class( "QM" ,
+QM = R6::R6Class( "QM",
+	## Public elements
+	##============={{{
 	
 	public = list(
 	
+	## Arguments
+	##==========
+	distX0 = NULL,
+	distY0 = NULL,
+	n_features = NULL,
+	tol = 1e-3,
 	
-	###############
-	## Arguments ##
-	###############
-	
-	n_features = 0,
-	bins = NULL,
-	
-	
-	#################
-	## Constructor ##
-	#################
-	
-	initialize = function( bins = NULL )
+	## Constructor
+	##============
+	initialize = function( distX0 = ROOPSD_rv_histogram , distY0 = ROOPSD_rv_histogram , ... )##{{{
 	{
-		self$bins = bins
+		kwargs = list(...)
+		self$distX0 = DistHelper$new( dist = distX0 , kwargs = kwargs[["kwargsX0"]] )
+		self$distY0 = DistHelper$new( dist = distY0 , kwargs = kwargs[["kwargsY0"]] )
+		self$n_features = kwargs[["n_features"]]
+		self$tol = if( is.null(kwargs[["tol"]]) ) 1e-3 else kwargs[["tol"]]
 	},
+	##}}}
 	
-	fit = function( Y , X )
+	
+	## Methods
+	##========
+	
+	fit = function( Y0 = NULL , X0 = NULL ) ##{{{
 	{
-		## Dimension and data formating
-		if( class(Y) == "numeric" )
-			Y = matrix( Y , nrow = length(Y) , ncol = 1 )
-		if( class(X) == "numeric" )
-			X = matrix( X , nrow = length(X) , ncol = 1 )
+		## Data in matrix
+		if( !is.null(Y0) && !is.matrix(Y0) ) Y0 = base::matrix( Y0 , ncol = 1 , nrow = length(Y0) )
+		if( !is.null(X0) && !is.matrix(X0) ) X0 = base::matrix( X0 , ncol = 1 , nrow = length(X0) )
 		
-		self$n_features = dim(X)[2]
-		
-		## Bins
-		if( is.null(self$bins) )
+		## Find n_features
+		if( is.null(self$n_features ) )
 		{
-			bin_width = SBCK::common_bin_width_estimator( list(X,Y) )
-			self$bins = list()
-			for( i in 1:self$n_features )
+			if( !is.null(Y0) )
 			{
-				self$bins[[i]] = base::seq( min(X[,i],Y[,i]) - bin_width[i] , max(X[,i],Y[,i]) + bin_width[i] , bin_width[i] )
+				self$n_features = base::ncol(Y0)
+			}
+			else if( !is.null(X0) )
+			{
+				self$n_features = base::ncol(X0)
+			}
+			else
+			{
+				base::stop( "QM fit: if X0 = Y0 = NULL, n_features must be set during intialization" )
 			}
 		}
 		
-		## Random variable
+		## distX and distY into list
+		self$distY0$set_features(self$n_features)
+		self$distX0$set_features(self$n_features)
+		
+		## Now fit itself
 		for( i in 1:self$n_features )
 		{
-			private$rvX[[i]] = rv_histogram$new( X[,i] , self$bins[[i]] )
-			private$rvY[[i]] = rv_histogram$new( Y[,i] , self$bins[[i]] )
+			self$distY0$fit( Y0[,i] , i )
+			self$distX0$fit( X0[,i] , i )
 		}
+		
 	},
+	##}}}
 	
-	predict = function( X )
+	predict = function(X0)##{{{
 	{
-		if( class(X) == "numeric" )
-		{
-			X = matrix( X , nrow = length(X) , ncol = 1 )
-		}
-		
-		Z = matrix( NA , nrow = dim(X)[1] , ncol = self$n_features )
-		
+		if( !is.null(X0) && !is.matrix(X0) ) X0 = base::matrix( X0 , ncol = 1 , nrow = length(X0) )
+		Z0 = base::matrix( NA , nrow = base::nrow(X0) , ncol = base::ncol(X0) )
 		for( i in 1:self$n_features )
 		{
-			Z[,i] = private$rvY[[i]]$icdf( private$rvX[[i]]$cdf( X[,i] ) )
+			cdf = self$distX0$law[[i]]$cdf( X0[,i] )
+			cdf[!(cdf < 1)] = 1-self$tol
+			cdf[!(cdf > 0)] = self$tol
+			Z0[,i] = self$distY0$law[[i]]$icdf( cdf )
 		}
-		return(Z)
+		return(Z0)
 	}
+	##}}}
 	
 	),
+	##}}}
 	
-	
-	######################
-	## Private elements ##
-	######################
-	
+	## Private elements
+	##==============={{{
 	private = list(
-	
-	###############
-	## Arguments ##
-	###############
-	
-	rvX = list(),
-	rvY = list()
 	)
+	##}}}
+
 )
+

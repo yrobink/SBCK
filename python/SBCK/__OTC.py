@@ -92,6 +92,7 @@ import scipy.stats as sc
 from .tools.__tools_cpp           import SparseHist
 from .tools.__bin_width_estimator import bin_width_estimator
 from .tools.__OT                  import OTNetworkSimplex
+from .tools.__OT                  import OTSinkhornLogDual
 
 
 ###########
@@ -141,52 +142,56 @@ class OTC:
 		self._ot         = ot
 	##}}}
 	
-	def fit( self , Y , X ):##{{{
+	def fit( self , Y0 , X0 ):##{{{
 		"""
 		Fit the OTC model
 		
 		Parameters
 		----------
-		Y	: np.array[ shape = (n_samples,n_features) ]
+		Y0	: np.array[ shape = (n_samples,n_features) ]
 			Reference dataset
-		X	: np.array[ shape = (n_samples,n_features) ]
+		X0	: np.array[ shape = (n_samples,n_features) ]
 			Biased dataset
 		"""
 		
 		## Sparse Histogram
-		self.bin_width  = np.array( [self.bin_width ] ).ravel() if self.bin_width  is not None else bin_width_estimator( [Y,X] )
+		self.bin_width  = np.array( [self.bin_width ] ).ravel() if self.bin_width  is not None else bin_width_estimator( [Y0,X0] )
 		self.bin_origin = np.array( [self.bin_origin] ).ravel() if self.bin_origin is not None else np.zeros( self.bin_width.size )
 		
 		self.bin_width  = np.array( [self.bin_width] ).ravel()
 		self.bin_origin = np.array( [self.bin_origin] ).ravel()
 		
-		self.muY = SparseHist( Y , bin_width = self.bin_width , bin_origin = self.bin_origin )
-		self.muX = SparseHist( X , bin_width = self.bin_width , bin_origin = self.bin_origin )
+		self.muY = SparseHist( Y0 , bin_width = self.bin_width , bin_origin = self.bin_origin )
+		self.muX = SparseHist( X0 , bin_width = self.bin_width , bin_origin = self.bin_origin )
 		
 		
 		## Optimal Transport
 		self._ot.fit( self.muX , self.muY )
+		if not self._ot.state:
+			print( "Warning: Error in network simplex, try SinkhornLogDual" )
+			self._ot = OTSinkhornLogDual()
+			self._ot.fit( self.muX , self.muY )
 		
 		## 
 		self._plan = np.copy( self._ot.plan() )
 		self._plan = ( self._plan.T / self._plan.sum( axis = 1 ) ).T
 	##}}}
 	
-	def predict( self , X ):##{{{
+	def predict( self , X0 ):##{{{
 		"""
 		Perform the bias correction
 		
 		Parameters
 		----------
-		X  : np.array[ shape = (n_samples,n_features) ]
+		X0  : np.array[ shape = (n_samples,n_features) ]
 			Array of values to be corrected
 		
 		Returns
 		-------
-		Xu : np.array[ shape = (n_samples,n_features) ]
+		Z0 : np.array[ shape = (n_samples,n_features) ]
 			Return an array of correction
 		"""
-		indx = self.muX.argwhere(X)
+		indx = self.muX.argwhere(X0)
 		indy = np.zeros_like(indx)
 		for i,ix in enumerate(indx):
 			indy[i] = np.random.choice( range(self.muY.size) , p = self._plan[ix,:] )

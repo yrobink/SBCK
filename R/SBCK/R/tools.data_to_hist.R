@@ -130,7 +130,7 @@ data_to_hist = function( X , Y )
 		return( list( muX = muX , muY = Y ) )
 	}
 	
-	bw = SBCK::common_bin_width_estimator( list(X,Y) )
+	bw = SBCK::bin_width_estimator( list(X,Y) )
 	muX = SBCK::SparseHist( X , bw )
 	muY = SBCK::SparseHist( Y , bw )
 	
