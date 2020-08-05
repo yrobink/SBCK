@@ -117,13 +117,13 @@
 #'
 #' @param ...
 #'        Many named arguments listed below
-#' @param distX0 [A ROOPSD_ distribution or a list of them]
+#' @param distX0 [A ROOPSD:: distribution or a list of them]
 #'        Describe the law of each margins. A list permit to use different laws for each margins. Default is rv_histogram.
-#' @param distY0 [A ROOPSD_ distribution or a list of them]
+#' @param distY0 [A ROOPSD:: distribution or a list of them]
 #'        Describe the law of each margins. A list permit to use different laws for each margins. Default is rv_histogram.
-#' @param distX1 [A ROOPSD_ distribution or a list of them]
+#' @param distX1 [A ROOPSD:: distribution or a list of them]
 #'        Describe the law of each margins. A list permit to use different laws for each margins. Default is rv_histogram.
-#' @param distY1 [A ROOPSD_ distribution or a list of them]
+#' @param distY1 [A ROOPSD:: distribution or a list of them]
 #'        Describe the law of each margins. A list permit to use different laws for each margins. Default is rv_histogram.
 #' @param n_features  [NULL or integer]
 #'        Normaly infered during fit, but if distX0, distX1 and distY0 are simultaneously frozen, must be set during initialization.

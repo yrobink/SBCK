@@ -138,16 +138,16 @@ dataset_gaussian_L_2d = function( n_samples )
 	size1  = n_samples - as.integer(n_samples/4)
 	
 	## Just a gaussian for X0
-	X0 = rmultivariate_normal( n = n_samples , mean = base::c(0.,0.) , cov = base::diag(2) )
+	X0 = ROOPSD::rmultivariate_normal( n = n_samples , mean = base::c(0.,0.) , cov = base::diag(2) )
 	
 	## A lightly complex gaussian for X1
-	X1 = rmultivariate_normal( n = n_samples , mean = base::c(1.,2.) , cov = matrix( base::c(2.,0,0,0.5) , nrow = 2 , ncol = 2 ) )
+	X1 = ROOPSD::rmultivariate_normal( n = n_samples , mean = base::c(1.,2.) , cov = matrix( base::c(2.,0,0,0.5) , nrow = 2 , ncol = 2 ) )
 	
 	## A very complex law for Y0
 	Y0 = matrix( NA , nrow = n_samples , ncol = 2 )
-	Y0[1:size0,]         = rmultivariate_normal( n = size0             , mean = base::c(7.,7.)   , cov = matrix( base::c(2,0,0,0.5)   , nrow = 2 , ncol = 2 ) )
-	Y0[size0:size1,]     = rmultivariate_normal( n = size1 - size0 + 1 , mean = base::c(5.,9.)   , cov = matrix( base::c(0.5,0,0,2)   , nrow = 2 , ncol = 2 ) )
-	Y0[size1:n_samples,] = rmultivariate_normal( n = n_samples - size1 + 1 , mean = base::c(5.,12.5) , cov = matrix( base::c(0.2,0,0,0.2) , nrow = 2 , ncol = 2 ) )
+	Y0[1:size0,]         = ROOPSD::rmultivariate_normal( n = size0             , mean = base::c(7.,7.)   , cov = matrix( base::c(2,0,0,0.5)   , nrow = 2 , ncol = 2 ) )
+	Y0[size0:size1,]     = ROOPSD::rmultivariate_normal( n = size1 - size0 + 1 , mean = base::c(5.,9.)   , cov = matrix( base::c(0.5,0,0,2)   , nrow = 2 , ncol = 2 ) )
+	Y0[size1:n_samples,] = ROOPSD::rmultivariate_normal( n = n_samples - size1 + 1 , mean = base::c(5.,12.5) , cov = matrix( base::c(0.2,0,0,0.2) , nrow = 2 , ncol = 2 ) )
 	meanY0 = base::apply( Y0 , 2 , base::mean )
 	meanX0 = base::apply( X0 , 2 , base::mean )
 	diff = meanY0 - meanX0
@@ -179,11 +179,11 @@ dataset_gaussian_L_2d = function( n_samples )
 dataset_gaussian_2d = function(n_samples)
 {
 	CX0 = base::matrix( base::c(2.33,-0.38,-0.38,0.48) , nrow = 2 , ncol = 2 )
-	X0  = rmultivariate_normal( n_samples , mean = base::rep(0,2) , cov = CX0 )
+	X0  = ROOPSD::rmultivariate_normal( n_samples , mean = base::rep(0,2) , cov = CX0 )
 	CX1 = base::matrix( base::c(0.1,-0.8,-0.8,3.37) , nrow = 2 , ncol = 2 )
-	X1  = rmultivariate_normal( n_samples , mean = base::rep(2,2) , cov = CX1 )
+	X1  = ROOPSD::rmultivariate_normal( n_samples , mean = base::rep(2,2) , cov = CX1 )
 	CY0 = base::matrix( base::c(0.32,-0.18,-0.18,2.40) , nrow = 2 , ncol = 2 )
-	Y0  = rmultivariate_normal( n_samples , mean = base::rep(3,2) , cov = CY0 )
+	Y0  = ROOPSD::rmultivariate_normal( n_samples , mean = base::rep(3,2) , cov = CY0 )
 	
 	return( list( X0 = X0 , X1 = X1 , Y0 = Y0 ) )
 }
@@ -224,9 +224,9 @@ dataset_bimodal_reverse_2d = function(n_samples)
 	X1 = NULL
 	for( idx in base::c("u","l") )
 	{
-		Y0 = base::rbind( Y0 , rmultivariate_normal( draw[[idx]] , lmY0[[idx]] , lcovY0[[idx]] ) )
-		X0 = base::rbind( X0 , rmultivariate_normal( draw[[idx]] , lmX0[[idx]] , lcovX0[[idx]] ) )
-		X1 = base::rbind( X1 , rmultivariate_normal( draw[[idx]] , lmX1[[idx]] , lcovX1[[idx]] ) )
+		Y0 = base::rbind( Y0 , ROOPSD::rmultivariate_normal( draw[[idx]] , lmY0[[idx]] , lcovY0[[idx]] ) )
+		X0 = base::rbind( X0 , ROOPSD::rmultivariate_normal( draw[[idx]] , lmX0[[idx]] , lcovX0[[idx]] ) )
+		X1 = base::rbind( X1 , ROOPSD::rmultivariate_normal( draw[[idx]] , lmX1[[idx]] , lcovX1[[idx]] ) )
 	}
 	
 	return( list( X0 = X0 , X1 = X1 , Y0 = Y0 ) )

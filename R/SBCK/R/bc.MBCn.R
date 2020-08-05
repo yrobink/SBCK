@@ -180,7 +180,7 @@ MBCn = R6::R6Class( "MBCn" ,
 		maxit = self$iter_slope$maxit
 		
 		## Generate orthogonal matrix
-		self$ortho_mat = rorthogonal_group( self$n_features , maxit )
+		self$ortho_mat = ROOPSD::rorthogonal_group( self$n_features , maxit )
 		
 		## Tips for performance: inverse + ortho of next in one pass
 		self$tips = array( NA , dim = base::dim(self$ortho_mat) )

@@ -89,9 +89,9 @@
 #' @docType class
 #' @importFrom R6 R6Class
 #'
-#' @param distX [A list of ROOPSD_ distribution or NULL]
+#' @param distX [A list of ROOPSD:: distribution or NULL]
 #'        Describe the law of each margins. A list permit to use different laws for each margins. Default is empirical.
-#' @param distY [A list of ROOPSD_ distribution or NULL]
+#' @param distY [A list of ROOPSD:: distribution or NULL]
 #'        Describe the law of each margins. A list permit to use different laws for each margins. Default is empirical.
 #' @param Y0  [matrix]
 #'        A matrix containing references during calibration period (time in column, variables in row)
@@ -163,21 +163,21 @@ MRec = R6::R6Class( "MRec" ,
 		{
 			private$distX = list()
 			for( i in 1:self$n_features)
-				private$distX[[i]] = ROOPSD_rv_histogram
+				private$distX[[i]] = ROOPSD::rv_histogram
 		}
 		if( is.null(private$distY) )
 		{
 			private$distY = list()
 			for( i in 1:self$n_features)
-				private$distY[[i]] = ROOPSD_rv_histogram
+				private$distY[[i]] = ROOPSD::rv_histogram
 		}
 		
 		## Goto Gaussian world
-		private$qmX0 = QM$new( distX0 = private$distX , distY0 = ROOPSD_Normal$new( mean = 0 , sd = 1 ) )
+		private$qmX0 = QM$new( distX0 = private$distX , distY0 = ROOPSD::Normal$new( mean = 0 , sd = 1 ) )
 		private$qmX0$fit( X0 = X0 )
-		private$qmX1 = QM$new( distX0 = private$distX , distY0 = ROOPSD_Normal$new( mean = 0 , sd = 1 ) )
+		private$qmX1 = QM$new( distX0 = private$distX , distY0 = ROOPSD::Normal$new( mean = 0 , sd = 1 ) )
 		private$qmX1$fit( X0 = X1 )
-		private$qmY0 = QM$new( distX0 = private$distY , distY0 = ROOPSD_Normal$new( mean = 0 , sd = 1 ) )
+		private$qmY0 = QM$new( distX0 = private$distY , distY0 = ROOPSD::Normal$new( mean = 0 , sd = 1 ) )
 		private$qmY0$fit( X0 = Y0 )
 		Y0g = private$qmY0$predict(Y0)
 		X0g = private$qmX0$predict(X0)
@@ -199,7 +199,7 @@ MRec = R6::R6Class( "MRec" ,
 		X1_recor = base::t(private$re_un_mat %*% base::t(X1g))
 		
 		## Final QM
-		private$qmY0 = QM$new( distX0 = ROOPSD_Normal , distY0 = private$distY )
+		private$qmY0 = QM$new( distX0 = ROOPSD::Normal , distY0 = private$distY )
 		private$qmY0$fit( Y0 , X0_recor )
 	},
 	
@@ -261,15 +261,15 @@ MRec = R6::R6Class( "MRec" ,
 #	
 #	distX = list()
 #	for( i in 1:n_features)
-#		distX[[i]] = if(!ratio[i]) ROOPSD_Empirical else ROOPSD_EmpiricalRatio
+#		distX[[i]] = if(!ratio[i]) ROOPSD::Empirical else ROOPSD::EmpiricalRatio
 #	
 #	
 #	## Goto Gaussian world
-#	qmX0 = QM$new( distX = distX , distY = ROOPSD_Normal$new( mean = 0 , sd = 1 ) )
+#	qmX0 = QM$new( distX = distX , distY = ROOPSD::Normal$new( mean = 0 , sd = 1 ) )
 #	qmX0$fit( X0 = X0 )
-#	qmX1 = QM$new( distX = distX , distY = ROOPSD_Normal$new( mean = 0 , sd = 1 ) )
+#	qmX1 = QM$new( distX = distX , distY = ROOPSD::Normal$new( mean = 0 , sd = 1 ) )
 #	qmX1$fit( X0 = X1 )
-#	qmY0 = QM$new( distX = distX , distY = ROOPSD_Normal$new( mean = 0 , sd = 1 ) )
+#	qmY0 = QM$new( distX = distX , distY = ROOPSD::Normal$new( mean = 0 , sd = 1 ) )
 #	qmY0$fit( X0 = Y0 )
 #	Y0g = qmY0$predict(Y0)
 #	X0g = qmX0$predict(X0)
@@ -290,7 +290,7 @@ MRec = R6::R6Class( "MRec" ,
 #	X1_recor = base::t(S_CY0g %*% Si_CX0g %*% base::t(X1g))
 #	
 #	## Final QM
-#	qmX0Y0 = QM$new( distX = ROOPSD_Normal , distY = distX )
+#	qmX0Y0 = QM$new( distX = ROOPSD::Normal , distY = distX )
 #	qmX0Y0$fit( Y0 , X0_recor )
 #	
 #	Z0 = qmX0Y0$predict(X0_recor)

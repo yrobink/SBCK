@@ -136,7 +136,7 @@ DistHelper = R6::R6Class( "DistHelper" ,
 	
 	initialize = function( dist , kwargs )
 	{
-		self$dist   = if( is.null(dist) ) ROOPSD_rv_histogram else dist
+		self$dist   = if( is.null(dist) ) ROOPSD::rv_histogram else dist
 		self$kwargs = if( is.null(kwargs) ) list() else kwargs
 		self$law    = list()
 	},

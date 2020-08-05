@@ -90,9 +90,9 @@
 #' @docType class
 #' @importFrom R6 R6Class
 #'
-#' @param distX0 [A ROOPSD_ distribution or a list of them]
+#' @param distX0 [A ROOPSD:: distribution or a list of them]
 #'        Describe the law of each margins. A list permit to use different laws for each margins. Default is empirical.
-#' @param distY0 [A ROOPSD_ distribution or a list of them]
+#' @param distY0 [A ROOPSD:: distribution or a list of them]
 #'        Describe the law of each margins. A list permit to use different laws for each margins. Default is empirical.
 #' @param ...
 #'        Others optional named arguments:
@@ -135,8 +135,8 @@
 #' Z0 = qm$predict(X0)
 #'
 #' # ## But in fact the laws are known, we can fit parameters:
-#' distY0 = list( ROOPSD_Exponential , ROOPSD_Normal )
-#' distX0 = list( ROOPSD_Normal , ROOPSD_Exponential )
+#' distY0 = list( ROOPSD::Exponential , ROOPSD::Normal )
+#' distX0 = list( ROOPSD::Normal , ROOPSD::Exponential )
 #' qm_fix = SBCK::QM$new( distY0 = distY0 , distX0 = distX0 )
 #' qm_fix$fit( Y0 , X0 )
 #' Z0 = qm_fix$predict(X0) 
@@ -156,7 +156,7 @@ QM = R6::R6Class( "QM",
 	
 	## Constructor
 	##============
-	initialize = function( distX0 = ROOPSD_rv_histogram , distY0 = ROOPSD_rv_histogram , ... )##{{{
+	initialize = function( distX0 = ROOPSD::rv_histogram , distY0 = ROOPSD::rv_histogram , ... )##{{{
 	{
 		kwargs = list(...)
 		self$distX0 = DistHelper$new( dist = distX0 , kwargs = kwargs[["kwargsX0"]] )
