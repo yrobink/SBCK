@@ -92,7 +92,6 @@ rm -rf python/var
 
 
 ## Delete R temporary files
-rm -f R/SBCK/NAMESPACE
 rm -f R/SBCK/man/*.Rd
 rm -f R/SBCK/R/RcppExports.R
 rm -f R/SBCK/src/*.so
