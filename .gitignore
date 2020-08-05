@@ -7,7 +7,6 @@ a.out
 *.swp
 RcppExports.cpp
 RcppExports.R
-NAMESPACE
 *.Rd
 *.egg-info
 build
