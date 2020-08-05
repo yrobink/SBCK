@@ -94,6 +94,7 @@ library(devtools)
 library(roxygen2)
 library(ggplot2)
 library(gridExtra)
+library(ROOPSD)
 
 try(roxygen2::roxygenize("../R/SBCK"))
 devtools::load_all("../R/SBCK")
@@ -195,44 +196,6 @@ test_pairwise_distances = function( show = FALSE )##{{{
 }
 ##}}}
 
-test_Empirical = function( show = FALSE )##{{{
-{
-	X = stats::rnorm( n = 10000 )
-	
-	rvX = SBCK::ROOPSD_rv_histogram$new()
-	rvX$fit( X )
-
-	## RVS
-	X2 = rvX$rvs(10000)
-	
-	## CDF and survival function (1-CDF)
-	x   = base::seq( rvX$min , rvX$max , length = 1000 )
-	cdf = rvX$cdf(x)
-	sf  = rvX$sf(x)
-	
-	## cdf inverse and sf inverse
-	p = base::seq( 0.05 , 0.95 , length = 1000 )
-	icdf = rvX$icdf(p)
-	isf  = rvX$isf(p)
-	
-	if( show )
-	{
-		plt$new_screen()
-		graphics::par( mfrow = base::c( 2 , 3 ) )
-		
-		graphics::plot( x , cdf  , col = "red" , type = "l" , main = "CDF" )
-		graphics::plot( x , sf   , col = "red" , type = "l" , main = "sf" )
-		graphics::hist( X , col = grDevices::rgb( 0 , 0 , 1 , 0.5 ) , freq = FALSE )
-		graphics::lines( density(X)  , col = "red" )
-		graphics::plot( p , icdf , col = "red" , type = "l" , main = "iCDF" )
-		graphics::plot( p , isf  , col = "red" , type = "l" , main = "isf" )
-		graphics::hist( X2 , col = grDevices::rgb( 0 , 0 , 1 , 0.5 ) , freq = FALSE )
-		graphics::lines( density(X2)  , col = "red" )
-		
-	}
-}
-##}}}
-
 test_SparseHist = function( show = FALSE )##{{{
 {
 	X = base::cbind( stats::rnorm(100000) , stats::rexp(100000) )
@@ -292,25 +255,6 @@ test_shuffle = function( show = FALSE )##{{{
 	}
 }
 ##}}}
-
-test_shift = function( show = FALSE )##{{{
-{
-	X = base::t(matrix( 1:20 , nrow = 2 , ncol = 10 ))
-	
-	sh = SBCK::Shift$new( 1 , method = "row" )
-	Xs = sh$transform(X)
-	Xi = sh$inverse(Xs)
-	
-	if(show)
-	{
-		cat( "Test Shift\n" )
-		print(X)
-		print(Xs)
-		print(Xi)
-	}
-}
-##}}}
-
 
 ## Test metrics
 ##=============
@@ -706,30 +650,6 @@ test_MBCn = function( show = FALSE )##{{{
 }
 ##}}}
 
-test_tsbc = function( show = FALSE )##{{{
-{
-	X0 = as.vector( stats::arima.sim( n = 2000 , model = list( ar = base::c(  0.6 , 0.2 , -0.1 ) ) , rand.gen = function(n) { return(stats::rnorm( n , mean = 0.2 , sd = 1   )) } )     )
-	Y0 = as.vector( stats::arima.sim( n = 2000 , model = list( ar = base::c( -0.3 , 0.4 , -0.2 ) ) , rand.gen = function(n) { return(stats::rnorm( n , mean = 0   , sd = 0.7 )) } ) + 5 )
-	
-	tsbc = SBCK::TSBC$new( 30 )
-	tsbc$fit( Y0 , X0 )
-	Z0 = tsbc$predict(X0)
-	
-	
-	if( show )
-	{
-		cat( "Test TSBC\n" )
-		PACF = matrix( NA , nrow = 10 , ncol = 3 )
-		colnames(PACF) = base::c( "X" , "Z" , "Y" )
-		PACF[,1] = stats::pacf( X0 , lag.max = 10 , plot = FALSE )$acf
-		PACF[,2] = stats::pacf( Z0 , lag.max = 10 , plot = FALSE )$acf
-		PACF[,3] = stats::pacf( Y0 , lag.max = 10 , plot = FALSE )$acf
-		
-		print(PACF)
-	}
-}
-##}}}
-
 
 ## All in one
 ##===========
@@ -738,11 +658,9 @@ run_all_tests = function( show = FALSE )##{{{
 {
 	## Tools tests
 	test_pairwise_distances(show)
-	test_Empirical(show)
 	test_SparseHist(show)
 	test_OT(show)
 	test_shuffle(show)
-	test_shift(show)
 	
 	## Metrics tests
 	test_metrics(show)
@@ -756,16 +674,13 @@ run_all_tests = function( show = FALSE )##{{{
 	test_MRec(show)
 	test_QDM(show)
 	test_MBCn(show)
-	test_tsbc(show)
 }
 ##}}}
-
 
 
 ##########
 ## main ##
 ##########
-
 
 ## Read command line arguments and run (or not) tests
 ##================================================{{{
