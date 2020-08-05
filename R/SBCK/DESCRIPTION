@@ -5,8 +5,8 @@ Version: 0.2.0
 Date: 2020-01-24
 Authors@R: person("Yoann", "Robin", email = "yoann.robin.k@gmail.com", role = c("aut", "cre"))
 Description: Bias Correction
-Depends: R (>= 3.3.3)
-License: CeCILL-C
+Depends: R (>= 3.3)
+License: CeCILL-2
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: yes
