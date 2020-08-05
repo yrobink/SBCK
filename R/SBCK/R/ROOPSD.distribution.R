@@ -223,6 +223,7 @@ AbstractDist = R6::R6Class( "AbstractDist",
 	
 	initialize = function( ddist , pdist , qdist , rdist , freeze = FALSE , parametric = TRUE )##{{{
 	{
+		print("=====================\nNot call!!!!!\n=====================\n")
 		self$ddist = ddist
 		self$pdist = pdist
 		self$qdist = qdist
