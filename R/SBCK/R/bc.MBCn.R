@@ -1,123 +1,104 @@
 
-##################################################################################
-##################################################################################
-##                                                                              ##
-## Copyright Yoann Robin, 2019                                                  ##
-##                                                                              ##
-## yoann.robin.k@gmail.com                                                      ##
-##                                                                              ##
-## This software is a computer program that is part of the SBCK (Statistical    ##
-## Bias Correction Kit). This library makes it possible to perform bias         ##
-## correction with non parametric methods, and give some metrics between Sparse ##
-## Histogram is high dimensions.                                                ##
-##                                                                              ##
-## This software is governed by the CeCILL-C license under French law and       ##
-## abiding by the rules of distribution of free software.  You can  use,        ##
-## modify and/ or redistribute the software under the terms of the CeCILL-C     ##
-## license as circulated by CEA, CNRS and INRIA at the following URL            ##
-## "http://www.cecill.info".                                                    ##
-##                                                                              ##
-## As a counterpart to the access to the source code and  rights to copy,       ##
-## modify and redistribute granted by the license, users are provided only      ##
-## with a limited warranty  and the software's author,  the holder of the       ##
-## economic rights,  and the successive licensors  have only  limited           ##
-## liability.                                                                   ##
-##                                                                              ##
-## In this respect, the user's attention is drawn to the risks associated       ##
-## with loading,  using,  modifying and/or developing or reproducing the        ##
-## software by the user in light of its specific status of free software,       ##
-## that may mean  that it is complicated to manipulate,  and  that  also        ##
-## therefore means  that it is reserved for developers  and  experienced        ##
-## professionals having in-depth computer knowledge. Users are therefore        ##
-## encouraged to load and test the software's suitability as regards their      ##
-## requirements in conditions enabling the security of their systems and/or     ##
-## data to be ensured and,  more generally, to use and operate it in the        ##
-## same conditions as regards security.                                         ##
-##                                                                              ##
-## The fact that you are presently reading this means that you have had         ##
-## knowledge of the CeCILL-C license and that you accept its terms.             ##
-##                                                                              ##
-##################################################################################
-##################################################################################
+################################################################################
+################################################################################
+##                                                                            ##
+## Copyright Yoann Robin, 2019                                                ##
+##                                                                            ##
+## yoann.robin.k@gmail.com                                                    ##
+##                                                                            ##
+## This software is a computer program that is part of the SBCK (Statistical  ##
+## Bias Correction Kit). This library makes it possible to perform bias       ##
+## correction with non parametric methods, and give some metrics between      ##
+## Sparse Histogram is high dimensions.                                       ##
+##                                                                            ##
+## This software is governed by the CeCILL-C license under French law and     ##
+## abiding by the rules of distribution of free software.  You can  use,      ##
+## modify and/ or redistribute the software under the terms of the CeCILL-C   ##
+## license as circulated by CEA, CNRS and INRIA at the following URL          ##
+## "http://www.cecill.info".                                                  ##
+##                                                                            ##
+## As a counterpart to the access to the source code and  rights to copy,     ##
+## modify and redistribute granted by the license, users are provided only    ##
+## with a limited warranty  and the software's author,  the holder of the     ##
+## economic rights,  and the successive licensors  have only  limited         ##
+## liability.                                                                 ##
+##                                                                            ##
+## In this respect, the user's attention is drawn to the risks associated     ##
+## with loading,  using,  modifying and/or developing or reproducing the      ##
+## software by the user in light of its specific status of free software,     ##
+## that may mean  that it is complicated to manipulate,  and  that  also      ##
+## therefore means  that it is reserved for developers  and  experienced      ##
+## professionals having in-depth computer knowledge. Users are therefore      ##
+## encouraged to load and test the software's suitability as regards their    ##
+## requirements in conditions enabling the security of their systems and/or   ##
+## data to be ensured and,  more generally, to use and operate it in the      ##
+## same conditions as regards security.                                       ##
+##                                                                            ##
+## The fact that you are presently reading this means that you have had       ##
+## knowledge of the CeCILL-C license and that you accept its terms.           ##
+##                                                                            ##
+################################################################################
+################################################################################
 
-##################################################################################
-##################################################################################
-##                                                                              ##
-## Copyright Yoann Robin, 2019                                                  ##
-##                                                                              ##
-## yoann.robin.k@gmail.com                                                      ##
-##                                                                              ##
-## Ce logiciel est un programme informatique faisant partie de la librairie     ##
-## SBCK (Statistical Bias Correction Kit). Cette librairie permet d'appliquer   ##
-## une correction de biais avec des méthodes non paramétriques, et propose      ##
-## diverses metrique entre Histograme Sparse en haute dimension.                ##
-##                                                                              ##
-## Ce logiciel est régi par la licence CeCILL-C soumise au droit français et    ##
-## respectant les principes de diffusion des logiciels libres. Vous pouvez      ##
-## utiliser, modifier et/ou redistribuer ce programme sous les conditions       ##
-## de la licence CeCILL-C telle que diffusée par le CEA, le CNRS et l'INRIA     ##
-## sur le site "http://www.cecill.info".                                        ##
-##                                                                              ##
-## En contrepartie de l'accessibilité au code source et des droits de copie,    ##
-## de modification et de redistribution accordés par cette licence, il n'est    ##
-## offert aux utilisateurs qu'une garantie limitée.  Pour les mêmes raisons,    ##
-## seule une responsabilité restreinte pèse sur l'auteur du programme, le       ##
-## titulaire des droits patrimoniaux et les concédants successifs.              ##
-##                                                                              ##
-## A cet égard  l'attention de l'utilisateur est attirée sur les risques        ##
-## associés au chargement,  à l'utilisation,  à la modification et/ou au        ##
-## développement et à la reproduction du logiciel par l'utilisateur étant       ##
-## donné sa spécificité de logiciel libre, qui peut le rendre complexe à        ##
-## manipuler et qui le réserve donc à des développeurs et des professionnels    ##
-## avertis possédant  des  connaissances  informatiques approfondies.  Les      ##
-## utilisateurs sont donc invités à charger  et  tester  l'adéquation  du       ##
-## logiciel à leurs besoins dans des conditions permettant d'assurer la         ##
-## sécurité de leurs systèmes et ou de leurs données et, plus généralement,     ##
-## à l'utiliser et l'exploiter dans les mêmes conditions de sécurité.           ##
-##                                                                              ##
-## Le fait que vous puissiez accéder à cet en-tête signifie que vous avez       ##
-## pris connaissance de la licence CeCILL-C, et que vous en avez accepté les    ##
-## termes.                                                                      ##
-##                                                                              ##
-##################################################################################
-##################################################################################
+################################################################################
+################################################################################
+##                                                                            ##
+## Copyright Yoann Robin, 2019                                                ##
+##                                                                            ##
+## yoann.robin.k@gmail.com                                                    ##
+##                                                                            ##
+## Ce logiciel est un programme informatique faisant partie de la librairie   ##
+## SBCK (Statistical Bias Correction Kit). Cette librairie permet d'appliquer ##
+## une correction de biais avec des méthodes non paramétriques, et propose    ##
+## diverses metrique entre Histograme Sparse en haute dimension.              ##
+##                                                                            ##
+## Ce logiciel est régi par la licence CeCILL-C soumise au droit français et  ##
+## respectant les principes de diffusion des logiciels libres. Vous pouvez    ##
+## utiliser, modifier et/ou redistribuer ce programme sous les conditions     ##
+## de la licence CeCILL-C telle que diffusée par le CEA, le CNRS et l'INRIA   ##
+## sur le site "http://www.cecill.info".                                      ##
+##                                                                            ##
+## En contrepartie de l'accessibilité au code source et des droits de copie,  ##
+## de modification et de redistribution accordés par cette licence, il n'est  ##
+## offert aux utilisateurs qu'une garantie limitée.  Pour les mêmes raisons,  ##
+## seule une responsabilité restreinte pèse sur l'auteur du programme, le     ##
+## titulaire des droits patrimoniaux et les concédants successifs.            ##
+##                                                                            ##
+## A cet égard  l'attention de l'utilisateur est attirée sur les risques      ##
+## associés au chargement,  à l'utilisation,  à la modification et/ou au      ##
+## développement et à la reproduction du logiciel par l'utilisateur étant     ##
+## donné sa spécificité de logiciel libre, qui peut le rendre complexe à      ##
+## manipuler et qui le réserve donc à des développeurs et des professionnels  ##
+## avertis possédant  des  connaissances  informatiques approfondies.  Les    ##
+## utilisateurs sont donc invités à charger  et  tester  l'adéquation  du     ##
+## logiciel à leurs besoins dans des conditions permettant d'assurer la       ##
+## sécurité de leurs systèmes et ou de leurs données et, plus généralement,   ##
+## à l'utiliser et l'exploiter dans les mêmes conditions de sécurité.         ##
+##                                                                            ##
+## Le fait que vous puissiez accéder à cet en-tête signifie que vous avez     ##
+## pris connaissance de la licence CeCILL-C, et que vous en avez accepté les  ##
+## termes.                                                                    ##
+##                                                                            ##
+################################################################################
+################################################################################
 
 #' MBCn (Multivariate Bias Correction)
 #'
+#' @description
 #' Perform a multivariate bias correction.
 #'
-#' @docType class
-#' @importFrom R6 R6Class
+#' @details
+#' BC is performed with an alternance of rotation and univariate BC.
 #'
-#' @param bc [bias correction methd]
-#'        Non stationary BC method of SBCK, as QDM. Default is QDM
-#' @param metric [function]
-#'        Distance between two distributions. Default is wasserstein.
-#' @param stopping_criteria [R6]
-#'        Class which implement a criteria to stop iterations. See SlopeStoppingCriteria
-#' @param stopping_criteria_params [list]
-#'        Params
-#' @param ... 
-#'        Named arguments passed to bc method
-#' @param Y0  [matrix]
-#'        A matrix containing references during calibration period (time in column, variables in row)
-#' @param X0 [matrix]
-#'        A matrix containing biased data during calibration period (time in column, variables in row)
-#' @param X1 [matrix]
-#'        A matrix containing biased data during projection period (time in column, variables in row)
+#' @references Cannon, A. J., Sobie, S. R., and Murdock, T. Q.: Bias correction
+#'             of simulated precipitation by quantile mapping: how well do
+#'             methods preserve relative changes in quantiles and extremes?, J.
+#'             Climate, 28, 6938–6959,
+#'             https://doi.org/10.1175/JCLI-D-14- 00754.1, 2015.
 #'
-#' @return Object of \code{\link{R6Class}} with methods for bias correction
-#' @format \code{\link{R6Class}} object.
-#'
-#' @section Methods:
-#' \describe{
-#'   \item{\code{new(bin_width,bin_origin,cov_factor)}}{This method is used to create object of this class with \code{MBCn}}
-#'   \item{\code{fit(Y0,X0,X1)}}{Fit the bias correction model from Y0, X0 and X1}.
-#'   \item{\code{predict(X1,X0)}}{Perform the bias correction.}
-#' }
-#' @references Cannon, A. J., Sobie, S. R., and Murdock, T. Q.: Bias correction of simulated precipitation by quantile mapping: how well do methods preserve relative changes in quantiles and extremes?, J. Climate, 28, 6938–6959, https://doi.org/10.1175/JCLI-D-14- 00754.1, 2015.
 #' @examples
-#' ## Three bivariate random variables (rnorm and rexp are inverted between ref and bias)
+#' ## Three bivariate random variables (rnorm and rexp are inverted between ref
+#' ## and bias)
 #' XY = SBCK::dataset_gaussian_exp_2d(2000)
 #' X0 = XY$X0 ## Biased in calibration period
 #' Y0 = XY$Y0 ## Reference in calibration period
@@ -143,20 +124,41 @@ MBCn = R6::R6Class( "MBCn" ,
 	## Arguments ##
 	###############
 	
+	#' @field n_features [integer] Numbers of features
 	n_features = NULL,
-	bc = NULL,
-	metric = NULL,
+	#' @field bc [BC class] Univariate BC method
+	bc         = NULL,
+	#' @field metric [function] distance between two datasets
+	metric     = NULL,
+	#' @field iter_slope [Stopping class criteria] class used to test when stop
 	iter_slope = NULL,
-	bc_params = NULL,
-	ortho_mat = NULL,
-	tips = NULL,
-	lbc = NULL,
+	#' @field bc_params [list] Parameters of bc
+	bc_params  = NULL,
+	#' @field ortho_mat [array] Array of orthogonal matrix
+	ortho_mat  = NULL,
+	#' @field tips [array] Array which contains the product of ortho and inverse
+	#'        of next
+	tips       = NULL,
+	#' @field lbc [list] list of BC method used.
+	lbc        = NULL,
 	
 	#################
 	## Constructor ##
 	#################
 	
-	initialize = function( bc = QDM , metric = wasserstein , stopping_criteria = SlopeStoppingCriteria , stopping_criteria_params = list( minit = 20 , maxit = 100 , tol = 1e-3 ) , ... ) ##{{{
+	## initialize ##{{{
+	#' @description
+    #' Create a new MBCn object.
+	#' @param bc [BC class] Univariate bias correction method
+	#' @param metric [function] distance between two datasets
+	#' @param stopping_criteria [Stopping class criteria] class use to test when
+	#'        to stop the iterations
+	#' @param stopping_criteria_params [list] parameters passed to
+	#'        stopping_criteria class
+	#' @param ... [] Others arguments passed to bc.
+	#'
+	#' @return A new `MBCn` object.
+	initialize = function( bc = QDM , metric = wasserstein , stopping_criteria = SlopeStoppingCriteria , stopping_criteria_params = list( minit = 20 , maxit = 100 , tol = 1e-3 ) , ... ) 
 	{
 		self$n_features = NULL
 		self$bc = bc
@@ -169,7 +171,15 @@ MBCn = R6::R6Class( "MBCn" ,
 	},
 	##}}}
 	
-	fit = function( Y0 , X0 , X1 )##{{{
+	## fit ##{{{
+	#' @description
+    #' Fit the bias correction method
+    #' @param Y0 [matrix: n_samples * n_features] Observations in calibration
+    #' @param X0 [matrix: n_samples * n_features] Model in calibration
+    #' @param X1 [matrix: n_samples * n_features] Model in projection
+    #'
+    #' @return NULL
+	fit = function( Y0 , X0 , X1 )
 	{
 		if( !is.matrix(Y0) ) Y0 = base::matrix( Y0 , ncol = 1 , nrow = length(Y0) )
 		if( !is.matrix(X0) ) X0 = base::matrix( X0 , ncol = 1 , nrow = length(X0) )
@@ -225,7 +235,16 @@ MBCn = R6::R6Class( "MBCn" ,
 	},
 	##}}}
 	
-	predict = function( X1 , X0 = NULL ) ##{{{
+	## predict ##{{{
+	#' @description
+    #' Predict the correction
+    #' @param X0 [matrix: n_samples * n_features or NULL] Model in calibration
+    #' @param X1 [matrix: n_samples * n_features] Model in projection
+    #'
+    #' @return [matrix or list] Return the matrix of correction of X1 if X0 is
+    #'                          NULL, else return a list containing Z1 and Z0,
+    #'                          the corrections of X1 and X0
+	predict = function( X1 , X0 = NULL ) 
 	{
 		if( is.null(X0) )
 			return(private$predict_X1(X1))
