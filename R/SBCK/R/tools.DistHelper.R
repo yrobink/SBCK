@@ -172,7 +172,7 @@ DistHelper = R6::R6Class( "DistHelper" ,
 	
 	is_parametric = function(i)
 	{
-		return( self$law[[i]]$is_parametric() )
+		return( "AbstractDist" %in% class(self$law[[i]]) )
 	}
 	
 	)
