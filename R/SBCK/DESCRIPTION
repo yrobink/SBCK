@@ -2,9 +2,10 @@ Package: SBCK
 Type: Package
 Title: Statistical Bias Correction Kit
 Version: 0.3.0
-Date: 2020-01-24
+Date: 2020-08-06
 Authors@R: person("Yoann", "Robin", email = "yoann.robin.k@gmail.com", role = c("aut", "cre"))
 Description: This package contains many methods of Bias Correction.
+URL: https://github.com/yrobink/SBCK
 Depends: R (>= 3.3)
 License: CeCILL-2
 Encoding: UTF-8
