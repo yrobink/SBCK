@@ -54,12 +54,13 @@ python3 setup.py install --user eigen="path-to-eigen"
 
 Requires:
 - R
-- roxygen2
+- roxygen2 (>= 7.0.0)
 - devtools
 - Rcpp
 - RcppEigen
 - methods
 - R6
+- [ROOPSD](https://github.com/yrobink/ROOPSD)
 
 Just run:
 ```
