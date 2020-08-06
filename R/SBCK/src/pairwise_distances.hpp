@@ -154,6 +154,8 @@ inline MetricType metric_choosen( std::string str_metric ) //{{{
 //' @param Y [Rcpp::NumericMatrix] Matrix
 //' @param str_metric [std::string] c++ string
 //'
+//' @return distXY [Rcpp::NumericMatrix] Matrix of distance
+//'
 //' @export
 //[[Rcpp::export]]
 Rcpp::NumericMatrix cpp_pairwise_distances_XYstr( Rcpp::NumericMatrix X , Rcpp::NumericMatrix Y , std::string str_metric )
@@ -185,6 +187,8 @@ Rcpp::NumericMatrix cpp_pairwise_distances_XYstr( Rcpp::NumericMatrix X , Rcpp::
 //' @usage cpp_pairwise_distances_Xstr(X,str_metric)
 //' @param X [Rcpp::NumericMatrix] Matrix
 //' @param str_metric [std::string] c++ string
+//'
+//' @return distXY [Rcpp::NumericMatrix] Matrix of distance
 //'
 //' @export
 //[[Rcpp::export]]
@@ -219,6 +223,8 @@ Rcpp::NumericMatrix cpp_pairwise_distances_Xstr( Rcpp::NumericMatrix X , std::st
 //' @param Y [Rcpp::NumericMatrix] Matrix
 //' @param metric [Rcpp::Function] R function
 //'
+//' @return distXY [Rcpp::NumericMatrix] Matrix of distance
+//'
 //' @export
 //[[Rcpp::export]]
 Rcpp::NumericMatrix cpp_pairwise_distances_XYCall( Rcpp::NumericMatrix X , Rcpp::NumericMatrix Y , Rcpp::Function metric )
@@ -249,6 +255,8 @@ Rcpp::NumericMatrix cpp_pairwise_distances_XYCall( Rcpp::NumericMatrix X , Rcpp:
 //' @usage cpp_pairwise_distances_XCall(X,metric)
 //' @param X [Rcpp::NumericMatrix] Matrix
 //' @param metric [Rcpp::Function] R function
+//'
+//' @return distXY [Rcpp::NumericMatrix] Matrix of distance
 //'
 //' @export
 //[[Rcpp::export]]

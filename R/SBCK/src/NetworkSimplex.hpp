@@ -122,7 +122,9 @@ typedef unsigned int node_id_type ;
 //' @usage network_simplex(X,Y,D)
 //' @param X [Rcpp::NumericVector] Source
 //' @param Y [Rcpp::NumericVector] Target
-//' @param D_[Rcpp::NumericMatrix] Cost
+//' @param D [Rcpp::NumericMatrix] Cost
+//'
+//' @return [Rcpp::List] List containing the plan and if optim is a success
 //'
 //' @export
 //[[Rcpp::export]]
