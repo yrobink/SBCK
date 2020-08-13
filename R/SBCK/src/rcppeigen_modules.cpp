@@ -87,17 +87,17 @@
 #include <RcppEigen.h>
 
 // [[Rcpp::depends(RcppEigen)]]
-#include "SparseHist.hpp"
-#include "pairwise_distances.hpp"
-#include "NetworkSimplex.hpp"
+#include "SparseHist.h"
+#include "NetworkSimplex.h"
+//#include "pairwise_distances.hpp"
 
 
 RCPP_MODULE(SBCK_cpp){
 	// Functions
-	Rcpp::function( "cpp_pairwise_distances_XYstr"  , &cpp_pairwise_distances_XYstr , "" ) ;
-	Rcpp::function( "cpp_pairwise_distances_Xstr"   , &cpp_pairwise_distances_Xstr , "" ) ;
-	Rcpp::function( "cpp_pairwise_distances_XYCall" , &cpp_pairwise_distances_XYCall , "" ) ;
-	Rcpp::function( "cpp_pairwise_distances_XCall"  , &cpp_pairwise_distances_XCall , "" ) ;
+//	Rcpp::function( "cpp_pairwise_distances_XYstr"  , &cpp_pairwise_distances_XYstr , "" ) ;
+//	Rcpp::function( "cpp_pairwise_distances_Xstr"   , &cpp_pairwise_distances_Xstr , "" ) ;
+//	Rcpp::function( "cpp_pairwise_distances_XYCall" , &cpp_pairwise_distances_XYCall , "" ) ;
+//	Rcpp::function( "cpp_pairwise_distances_XCall"  , &cpp_pairwise_distances_XCall , "" ) ;
 	Rcpp::function( "network_simplex" , &network_simplex , "" ) ;
 	
 	// Classes

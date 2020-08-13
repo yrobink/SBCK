@@ -11,6 +11,6 @@ License: CeCILL-2
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: yes
-Imports: Rcpp, RcppEigen, methods, R6, ROOPSD
+Imports: Rcpp, RcppEigen, methods, R6, ROOPSD, pmetric
 LinkingTo: Rcpp, RcppEigen
 RoxygenNote: 7.1.1

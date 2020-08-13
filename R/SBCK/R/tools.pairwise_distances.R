@@ -83,52 +83,52 @@
 ################################################################################
 
 
-#' Pairwise distances
-#'
-#' Compute the matrix of pairwise distances between a matrix X and a matrix Y
-#' 
-#' @usage pairwise_distances(X,Y,metric)
-#' @param X [matrix] A first matrix (nrow = n_samples, ncol = n_features).
-#' @param Y [matrix] A second matrix (nrow = n_samples, ncol = n_features).
-#'        If Y = NULL, then pairwise distances is computed between X and X
-#' @param metric [string or callable] The metric used. If metric is a string,
-#'        then metric is compiled (so faster). Available string are:
-#'        "euclidean", "sqeuclidean" (Square of Euclidean distance),
-#'        "logeulidean" (log of the Euclidean distance) and "chebyshev" (max).
-#'        Callable must be a function taking two vectors and returning a double.
-#'
-#' @return distXY [matrix] Pairwise distances. distXY[i,j] is the distance
-#'         between X[i,] and Y[j,]
-#'
-#' @examples
-#' X = matrix( stats::rnorm(200) , ncol = 2 , nrow = 100 )
-#' Y = matrix( stats::rexp(200)  , ncol = 2 , nrow = 100 )
-#'
-#' distXY = SBCK::pairwise_distances( X , Y ) 
-#'
-#' @export
-pairwise_distances = function( X , Y = NULL , metric = "euclidean" )
-{
-	if( is.null(Y) )
-	{
-		if( is.character(metric) )
-		{
-			return( SBCK::cpp_pairwise_distances_Xstr( X , metric ) )
-		}
-		if( is.function(metric) )
-		{
-			return( SBCK::cpp_pairwise_distances_XCall( X , metric ) )
-		}
-	}
-	else
-	{
-		if( is.character(metric) )
-		{
-			return( SBCK::cpp_pairwise_distances_XYstr( X , Y , metric ) )
-		}
-		if( is.function(metric) )
-		{
-			return( SBCK::cpp_pairwise_distances_XYCall( X , Y , metric ) )
-		}
-	}
-}
+##=> ## #' Pairwise distances
+##=> ## #'
+##=> ## #' Compute the matrix of pairwise distances between a matrix X and a matrix Y
+##=> ## #' 
+##=> ## #' @usage pairwise_distances(X,Y,metric)
+##=> ## #' @param X [matrix] A first matrix (nrow = n_samples, ncol = n_features).
+##=> ## #' @param Y [matrix] A second matrix (nrow = n_samples, ncol = n_features).
+##=> ## #'        If Y = NULL, then pairwise distances is computed between X and X
+##=> ## #' @param metric [string or callable] The metric used. If metric is a string,
+##=> ## #'        then metric is compiled (so faster). Available string are:
+##=> ## #'        "euclidean", "sqeuclidean" (Square of Euclidean distance),
+##=> ## #'        "logeulidean" (log of the Euclidean distance) and "chebyshev" (max).
+##=> ## #'        Callable must be a function taking two vectors and returning a double.
+##=> ## #'
+##=> ## #' @return distXY [matrix] Pairwise distances. distXY[i,j] is the distance
+##=> ## #'         between X[i,] and Y[j,]
+##=> ## #'
+##=> ## #' @examples
+##=> ## #' X = matrix( stats::rnorm(200) , ncol = 2 , nrow = 100 )
+##=> ## #' Y = matrix( stats::rexp(200)  , ncol = 2 , nrow = 100 )
+##=> ## #'
+##=> ## #' distXY = SBCK::pairwise_distances( X , Y ) 
+##=> ## #'
+##=> ## #' @export
+##=> ## pairwise_distances = function( X , Y = NULL , metric = "euclidean" )
+##=> ## {
+##=> ## 	if( is.null(Y) )
+##=> ## 	{
+##=> ## 		if( is.character(metric) )
+##=> ## 		{
+##=> ## 			return( SBCK::cpp_pairwise_distances_Xstr( X , metric ) )
+##=> ## 		}
+##=> ## 		if( is.function(metric) )
+##=> ## 		{
+##=> ## 			return( SBCK::cpp_pairwise_distances_XCall( X , metric ) )
+##=> ## 		}
+##=> ## 	}
+##=> ## 	else
+##=> ## 	{
+##=> ## 		if( is.character(metric) )
+##=> ## 		{
+##=> ## 			return( SBCK::cpp_pairwise_distances_XYstr( X , Y , metric ) )
+##=> ## 		}
+##=> ## 		if( is.function(metric) )
+##=> ## 		{
+##=> ## 			return( SBCK::cpp_pairwise_distances_XYCall( X , Y , metric ) )
+##=> ## 		}
+##=> ## 	}
+##=> ## }

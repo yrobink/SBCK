@@ -1,4 +1,4 @@
-
+ 
 //==============================================================================//
 //==============================================================================//
 //                                                                              //
@@ -82,200 +82,151 @@
 //==============================================================================//
 //==============================================================================//
 
-#ifndef SBCK_PAIRWISE_DISTANCES_INCLUDED
-#define SBCK_PAIRWISE_DISTANCES_INCLUDED
+#ifndef SBCK_NETWORKSIMPLEX
+#define SBCK_NETWORKSIMPLEX
 
+
+
+//-----------//
+// Libraries //
+//-----------//
+
+#include <iostream>
+#include <vector>
+#include <map>
+#include <functional>
+#include <algorithm>
 #include <cmath>
 
-//---------//
-// metrics //
-//---------//
-
-typedef std::function<double(Rcpp::NumericMatrix::Row,Rcpp::NumericMatrix::Row)> MetricType ;
-
-inline double sqeuclidean_metric( Rcpp::NumericMatrix::Row x , Rcpp::NumericMatrix::Row y ) //{{{
-{
-	double dist(0) ;
-	std::size_t size(x.size()) ;
-	for( std::size_t s = 0 ; s < size ; ++s )
-		dist += std::pow( x[s] - y[s] , 2 ) ;
-	return dist ;
-} //}}}
-
-inline double euclidean_metric( Rcpp::NumericMatrix::Row x , Rcpp::NumericMatrix::Row y ) //{{{
-{
-	return std::sqrt( sqeuclidean_metric( x , y ) ) ;
-} //}}}
-
-inline double chebyshev_metric( Rcpp::NumericMatrix::Row x , Rcpp::NumericMatrix::Row y ) //{{{
-{
-	double dist(-1) ;
-	std::size_t size(x.size()) ;
-	for( std::size_t s = 0 ; s < size ; ++s )
-		dist = std::max( dist , std::abs( x[s] - y[s] ) ) ;
-	return dist ;
-} //}}}
-
-inline double logeuclidean_metric( Rcpp::NumericMatrix::Row x , Rcpp::NumericMatrix::Row y ) //{{{
-{
-	double dist(0) ;
-	std::size_t size(x.size()) ;
-	for( std::size_t s = 0 ; s < size ; ++s )
-		dist += std::pow( x[s] - y[s] , 2 ) ;
-	return std::log( dist ) / 2. ;
-} //}}}
-
-inline MetricType metric_choosen( std::string str_metric ) //{{{
-{
-	if( str_metric == "sqeuclidean" )
-		return sqeuclidean_metric ;
-	else if( str_metric == "chebyshev" )
-		return chebyshev_metric ;
-	else if( str_metric == "logeuclidean" )
-		return logeuclidean_metric ;
-	else
-		return euclidean_metric ;
-} //}}}
+#include "NetworkSimplexLemon.h"
 
 
-//----------//
-// Pairwise //
-//----------//
+//============//
+// namespaces //
+//============//
 
-// cpp_pairwise_distances_XYstr {{{
 
-//' cpp_pairwise_distances_XYstr
+
+//===========//
+// Functions //
+//===========//
+
+using namespace lemon ;
+typedef unsigned int node_id_type ;
+
+
+//' network_simplex
 //' 
-//' Pairwise distances between two differents matrix X and Y with a 
-//' compiled str_metric. DO NOT USE, use SBCK::pairwise_distances
+//' Function to solve network simplex problem
 //'
-//' @usage cpp_pairwise_distances_XYstr(X,Y,str_metric)
-//' @param X [Rcpp::NumericMatrix] Matrix
-//' @param Y [Rcpp::NumericMatrix] Matrix
-//' @param str_metric [std::string] c++ string
+//' @usage network_simplex(X,Y,D)
+//' @param X [Rcpp::NumericVector] Source
+//' @param Y [Rcpp::NumericVector] Target
+//' @param D [Rcpp::NumericMatrix] Cost
 //'
-//' @return distXY [Rcpp::NumericMatrix] Matrix of distance
+//' @return [Rcpp::List] List containing the plan and if optim is a success
 //'
 //' @export
 //[[Rcpp::export]]
-Rcpp::NumericMatrix cpp_pairwise_distances_XYstr( Rcpp::NumericMatrix X , Rcpp::NumericMatrix Y , std::string str_metric )
+Rcpp::List network_simplex( Rcpp::NumericVector X , Rcpp::NumericVector Y , Rcpp::NumericMatrix D )
 {
-	// Some parameters
-	std::size_t size0 = X.nrow() ;
-	std::size_t size1 = Y.nrow() ;
-	MetricType metric = metric_choosen( str_metric ) ;
+	// beware M and C anre strored in row major C style!!!
+	int cur ;
+	double max , max_iter(-1.) ;
+	node_id_type n , m , n1(X.size()) , n2(Y.size()) ;
 	
-	// Distances
-	Rcpp::NumericMatrix Dist( size0 , size1 ) ;
-	for( std::size_t i = 0 ; i < size0 ; ++i )
+	typedef FullBipartiteDigraph Digraph ;
+	DIGRAPH_TYPEDEFS(FullBipartiteDigraph) ;
+	
+	// Get the number of non zero coordinates for r and c
+	n = 0 ;
+	for( node_id_type i = 0 ; i < n1 ; i++ )
 	{
-		for( std::size_t j = 0 ; j < size1 ; ++j )
+		if( X(i) > 0 )
+			n++ ;
+	}
+	m = 0 ;
+	for( node_id_type i = 0 ; i < n2 ; i++ )
+	{
+		if( Y(i) > 0 )
+			m++ ;
+	}
+	
+	Rcpp::NumericMatrix G(n1,n2) ;
+	
+	// Define the graph
+	std::vector<int> indI(n) , indJ(m) ;
+	std::vector<double> weights1(n) , weights2(m) ;
+	Digraph di(n,m) ;
+	NetworkSimplexSimple<Digraph,double,double,node_id_type> net( di , true , n + m , n * m , max_iter ) ;
+	
+
+	// Set supply and demand, don't account for 0 values (faster)
+	max = 0 ;
+	cur = 0 ;
+	for( node_id_type i = 0 ; i < n1 ; i++ )
+	{
+		double val = X(i) ;
+		if( val > 0 )
 		{
-			Dist(i,j) = metric( X(i,Rcpp::_) , Y(j,Rcpp::_) ) ;
+			weights1[ di.nodeFromId(cur) ] = val ;
+			max += val ;
+			indI[cur++] = i ;
 		}
 	}
-	return Dist ;
-} //}}}
-
-// cpp_pairwise_distances_Xstr {{{
-
-//' cpp_pairwise_distances_Xstr
-//' 
-//' Pairwise distances between X and themselves with a compiled 
-//' str_metric. DO NOT USE, use SBCK::pairwise_distances
-//'
-//' @usage cpp_pairwise_distances_Xstr(X,str_metric)
-//' @param X [Rcpp::NumericMatrix] Matrix
-//' @param str_metric [std::string] c++ string
-//'
-//' @return distXY [Rcpp::NumericMatrix] Matrix of distance
-//'
-//' @export
-//[[Rcpp::export]]
-Rcpp::NumericMatrix cpp_pairwise_distances_Xstr( Rcpp::NumericMatrix X , std::string str_metric )
-{
-	// Some parameters
-	std::size_t size = X.nrow() ;
-	MetricType metric = metric_choosen( str_metric ) ;
 	
-	// Distances
-	Rcpp::NumericMatrix Dist( size , size ) ;
-	for( std::size_t i = 0 ; i < size ; ++i )
+
+	// Demand is actually negative supply...
+	max = 0 ;
+	cur = 0 ;
+	for( node_id_type i = 0 ; i < n2 ; i++ )
 	{
-		for( std::size_t j = i ; j < size ; ++j )
+		double val = Y(i) ;
+		if( val > 0 )
 		{
-			Dist(i,j) = metric( X(i,Rcpp::_) , X(j,Rcpp::_) ) ;
-			Dist(j,i) = Dist(i,j) ;
+			weights2[ di.nodeFromId(cur) ] = -val ;
+			indJ[cur++] = i ;
+			max -= val ;
 		}
 	}
-	return Dist ;
-} //}}}
-
-// cpp_pairwise_distances_XYCall {{{
-
-//' cpp_pairwise_distances_XYCall
-//' 
-//' Pairwise distances between X  and Y with a R function (metric).
-//' DO NOT USE, use SBCK::pairwise_distances
-//'
-//' @usage cpp_pairwise_distances_XYCall(X,Y,metric)
-//' @param X [Rcpp::NumericMatrix] Matrix
-//' @param Y [Rcpp::NumericMatrix] Matrix
-//' @param metric [Rcpp::Function] R function
-//'
-//' @return distXY [Rcpp::NumericMatrix] Matrix of distance
-//'
-//' @export
-//[[Rcpp::export]]
-Rcpp::NumericMatrix cpp_pairwise_distances_XYCall( Rcpp::NumericMatrix X , Rcpp::NumericMatrix Y , Rcpp::Function metric )
-{
-	// Some parameters
-	std::size_t size0 = X.nrow() ;
-	std::size_t size1 = Y.nrow() ;
 	
-	// Distances
-	Rcpp::NumericMatrix Dist( size0 , size1 ) ;
-	for( std::size_t i = 0 ; i < size0 ; ++i )
+	
+	net.supplyMap( &weights1[0] , n , &weights2[0] , m ) ;
+	
+
+	// Set the cost of each edge
+	max = 0 ;
+	for( node_id_type i = 0 ; i < n ; i++ )
 	{
-		for( std::size_t j = 0 ; j < size1 ; ++j )
+		for( node_id_type j = 0 ; j < m ; j++ )
 		{
-			Dist(i,j) = Rcpp::as<double>( metric( X(i,Rcpp::_) , Y(j,Rcpp::_) ) ) ;
+			double val = D(indI[i],indJ[j]) ;//*( D + indI[i] * n2 + indJ[j] ) ;
+			net.setCost( di.arcFromId( i * m + j ) , val ) ;
+			if( val > max )
+			{
+				max = val ;
+			}
 		}
 	}
-	return Dist ;
-} //}}}
-
-// cpp_pairwise_distances_XCall {{{
-
-//' cpp_pairwise_distances_XCall
-//' 
-//' Pairwise distances between X and themselves with a R function (metric).
-//' DO NOT USE, use SBCK::pairwise_distances
-//'
-//' @usage cpp_pairwise_distances_XCall(X,metric)
-//' @param X [Rcpp::NumericMatrix] Matrix
-//' @param metric [Rcpp::Function] R function
-//'
-//' @return distXY [Rcpp::NumericMatrix] Matrix of distance
-//'
-//' @export
-//[[Rcpp::export]]
-Rcpp::NumericMatrix cpp_pairwise_distances_XCall( Rcpp::NumericMatrix X , Rcpp::Function metric )
-{
-	// Some parameters
-	std::size_t size = X.nrow() ;
 	
-	// Distances
-	Rcpp::NumericMatrix Dist( size , size ) ;
-	for( std::size_t i = 0 ; i < size ; ++i )
+	
+	// Solve the problem with the network simplex algorithm
+	int ret = net.run() ;
+	if( ret == static_cast<int>(net.OPTIMAL) )
 	{
-		for( std::size_t j = i ; j < size ; ++j )
+		for( node_id_type i = 0 ; i < n ; i++ )
 		{
-			Dist(i,j) = Rcpp::as<double>(metric( X(i,Rcpp::_) , X(j,Rcpp::_) )) ;
-			Dist(j,i) = Dist(i,j) ;
+			for( node_id_type j = 0 ; j < m ; j++ )
+			{
+				G(indI[i],indJ[j]) = net.flow( di.arcFromId( i * m + j ) ) ;
+			}
 		}
 	}
-	return Dist ;
-} //}}}
+	
+	Rcpp::List output = Rcpp::List::create( Rcpp::Named("plan") = G , Rcpp::Named("success") = ret ) ;
+	
+	return output ;
+}
+
 
 #endif

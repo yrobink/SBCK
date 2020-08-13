@@ -86,19 +86,16 @@
 #'
 #' Statistical Bias Correction Kit
 #'
-#' @title SBCK
-#' @details This library makes it possible to perform a bias correction
 #' @docType package
 #' @author Yoann Robin Maintainer: Yoann Robin <yoann.robin.k@gmail.com>
 #' @import Rcpp
 #' @import RcppEigen
-#' @importFrom Rcpp evalCpp sourceCpp loadModule
-#' @useDynLib SBCK
-#'
-#' @export
+#' @importFrom Rcpp evalCpp
+#' @useDynLib SBCK, .registration=TRUE
+#' @name SBCK
 NULL
 
 
-loadModule("SBCK_cpp", TRUE)
+#loadModule("SBCK_cpp", TRUE)
 
 
