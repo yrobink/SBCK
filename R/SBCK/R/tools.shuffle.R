@@ -129,8 +129,7 @@ SchaakeShuffle = R6::R6Class( "SchaakeShuffle" ,
 	fit = function( Y0 )
 	{
 		private$Y0 = Y0
-		if( class(Y0) == "numeric" )
-			private$Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
+		if( !is.matrix(Y0) ) private$Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
 	},
 	##}}}
 	
@@ -142,8 +141,7 @@ SchaakeShuffle = R6::R6Class( "SchaakeShuffle" ,
 	#' @return Z0 [vector] data shuffled
 	predict = function( X0 )
 	{
-		if( class(X0) == "numeric" )
-			X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
+		if( !is.matrix(X0) ) X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
 		
 		YY = NULL
 		XX = NULL
@@ -303,8 +301,7 @@ SchaakeShuffleRef = R6::R6Class( "SchaakeShuffleRef" ,
 	#' @return Z0 [vector] data shuffled
 	predict = function(X0)
 	{
-		if( class(X0) == "numeric" )
-			X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
+		if( !is.matrix(X0) ) X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
 		Z0 = super$predict(X0)
 		
 		rank_X0  = base::rank(X0[,self$ref])

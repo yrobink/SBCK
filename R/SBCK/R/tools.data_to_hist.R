@@ -110,7 +110,7 @@
 #' @export
 data_to_hist = function( X , Y )
 {
-	is_hist = function(Z) { return( (class(Z) == "Rcpp_SparseHistBase" ) || ("OTHist" %in% class(Z))  ) }
+	is_hist = function(Z) { return( ( "Rcpp_SparseHistBase" %in% class(Z) ) || ("OTHist" %in% class(Z))  ) }
 	X_is_hist = is_hist(X)
 	Y_is_hist = is_hist(Y)
 	

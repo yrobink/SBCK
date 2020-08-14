@@ -106,7 +106,7 @@
 #' @export
 bin_width_estimator = function( X , method = "auto" ) 
 {
-	if( class(X) == "list" )
+	if( "list" %in% class(X) )
 	{
 		bw = matrix( NA , nrow = length(X) , ncol = base::ncol(X[[1]]) )
 		for( i in 1:length(X) )
@@ -114,7 +114,7 @@ bin_width_estimator = function( X , method = "auto" )
 		return( base::apply( bw , 2 , base::min ) )
 	}
 	
-	if( class(X) == "numeric" )
+	if( !is.matrix(X) )
 		X = matrix( X , nrow = length(X) , ncol = 1 )
 	
 	n_samples  = dim(X)[1]

@@ -106,8 +106,7 @@
 SparseHist = function( X , bin_width = NULL , bin_origin = NULL )
 {
 	## If X is a vector, transform it to matrix
-	if( class(X) == "numeric" )
-		X = matrix( X , nrow = length(X) , ncol = 1 )
+	if( !is.matrix(X) ) X = matrix( X , nrow = length(X) , ncol = 1 )
 	
 	## bin_width
 	if( is.null(bin_width) )

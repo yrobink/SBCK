@@ -167,12 +167,9 @@ dOTC = R6::R6Class( "dOTC" ,
 	fit = function( Y0 , X0 , X1 )
 	{
 		## Dimension and data formating
-		if( class(Y0) == "numeric" )
-			Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
-		if( class(X0) == "numeric" )
-			X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
-		if( class(X1) == "numeric" )
-			X1 = matrix( X1 , nrow = length(X1) , ncol = 1 )
+		if( !is.matrix(Y0) ) Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
+		if( !is.matrix(X0) ) X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
+		if( !is.matrix(X1) ) X1 = matrix( X1 , nrow = length(X1) , ncol = 1 )
 		
 		## Bin width
 		if( is.null(self$bin_width) )

@@ -180,10 +180,8 @@ OTC = R6::R6Class( "OTC" ,
 	fit = function( Y0 , X0 )
 	{
 		## Dimension and data formating
-		if( class(Y0) == "numeric" )
-			Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
-		if( class(X0) == "numeric" )
-			X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
+		if( !is.matrix(Y0) ) Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
+		if( !is.matrix(X0) ) X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
 		self$n_features = base::ncol(Y0)
 		
 		if( is.null(self$bin_width) )
@@ -211,7 +209,7 @@ OTC = R6::R6Class( "OTC" ,
     #' @return [matrix] Return the corrections of X0
 	predict = function( X0 )
 	{
-		if( class(X0) == "numeric" )
+		if( !is.matrix(X0) )
 			X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
 		
 		arg_X = matrix( self$muX$argwhere(X0) , nrow = base::nrow(X0) , ncol = 1 )

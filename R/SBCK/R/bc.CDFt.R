@@ -206,9 +206,9 @@ CDFt = R6::R6Class( "CDFt" ,
 	{
 		## Dimension and data formating
 		##=============================
-		if( class(Y0) == "numeric" ) Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
-		if( class(X0) == "numeric" ) X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
-		if( class(X1) == "numeric" ) X1 = matrix( X1 , nrow = length(X1) , ncol = 1 )
+		if( is.vector(Y0) ) Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
+		if( is.vector(X0) ) X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
+		if( is.vector(X1) ) X1 = matrix( X1 , nrow = length(X1) , ncol = 1 )
 		
 		## Set features
 		##=============
@@ -271,8 +271,7 @@ CDFt = R6::R6Class( "CDFt" ,
     #'                          the corrections of X1 and X0
 	predict = function( X1 , X0 = NULL )
 	{
-		if( class(X0) == "numeric" ) X0 = matrix( X0 , nrow = length(X1) , ncol = 1 )
-		if( class(X1) == "numeric" ) X1 = matrix( X1 , nrow = length(X1) , ncol = 1 )
+		if( !is.matrix(X1) ) X1 = matrix( X1 , nrow = length(X1) , ncol = 1 )
 		
 		if( is.null(X0) )
 		{
@@ -288,6 +287,7 @@ CDFt = R6::R6Class( "CDFt" ,
 		}
 		else
 		{
+			if( !is.matrix(X0) ) X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
 			Z0 = matrix( NA , nrow = base::nrow(X0) , ncol = base::ncol(X0) )
 			Z1 = matrix( NA , nrow = base::nrow(X1) , ncol = base::ncol(X1) )
 			for( i in 1:self$n_features )

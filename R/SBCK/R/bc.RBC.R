@@ -142,7 +142,7 @@ RBC = R6::R6Class( "RBC" ,
     #' @return NULL
 	fit = function( Y0 , X0 , X1 = NULL )
 	{
-		private$Y0 = if( class(Y0) == "numeric" ) matrix( Y0 , nrow = length(Y0) , ncol = 1 ) else Y0
+		private$Y0 = if( !is.matrix(Y0) ) matrix( Y0 , nrow = length(Y0) , ncol = 1 ) else Y0
 	},
 	##}}}
 	
@@ -161,14 +161,14 @@ RBC = R6::R6Class( "RBC" ,
 		Z1 = NULL
 		if( !is.null(X0) )
 		{
-			if( class(X0) == "numeric" ) X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
+			if( !is.matrix(X0) ) X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
 			idx = base::sample( 1:base::nrow(private$Y0) , base::nrow(X0) , replace = TRUE )
 			Z0 = private$Y0[idx,]
 		}
 		
 		if( !is.null(X1) )
 		{
-			if( class(X1) == "numeric" ) X1 = matrix( X1 , nrow = length(X0) , ncol = 1 )
+			if( !is.matrix(X1) ) X1 = matrix( X1 , nrow = length(X0) , ncol = 1 )
 			idx = base::sample( 1:base::nrow(private$Y0) , base::nrow(X1) , replace = TRUE )
 			Z1 = private$Y0[idx,]
 		}
