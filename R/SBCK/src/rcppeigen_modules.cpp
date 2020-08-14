@@ -93,12 +93,6 @@
 
 
 RCPP_MODULE(SBCK_cpp){
-	// Functions
-//	Rcpp::function( "cpp_pairwise_distances_XYstr"  , &cpp_pairwise_distances_XYstr , "" ) ;
-//	Rcpp::function( "cpp_pairwise_distances_Xstr"   , &cpp_pairwise_distances_Xstr , "" ) ;
-//	Rcpp::function( "cpp_pairwise_distances_XYCall" , &cpp_pairwise_distances_XYCall , "" ) ;
-//	Rcpp::function( "cpp_pairwise_distances_XCall"  , &cpp_pairwise_distances_XCall , "" ) ;
-	Rcpp::function( "network_simplex" , &network_simplex , "" ) ;
 	
 	// Classes
 	Rcpp::class_<SparseHistBase>("SparseHistBase")
