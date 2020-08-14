@@ -92,7 +92,7 @@
 #'        n_features)
 #' @param p [float] power of energy distance, default is 2.
 #' @param metric [str or function] metric for pairwise distance, default is
-#'        "euclidean", see SBCK::pairwise_distances
+#'        "euclidean", see pmetric::pairwise_distances
 #'        
 #' @return [float] value of distance
 #'
@@ -119,9 +119,9 @@ energy = function( X , Y , p = 2 , metric = "euclidean" )
 	pX = matrix( muX$p , nrow = muX$n_samples , ncol = 1 )
 	pY = matrix( muY$p , nrow = muY$n_samples , ncol = 1 )
 	
-	XY = base::sum( SBCK::pairwise_distances( muX$c , muY$c , metric = metric )^p * ( pX %*% base::t(pY) ) )
-	XX = base::sum( SBCK::pairwise_distances( muX$c         , metric = metric )^p * ( pX %*% base::t(pX) ) )
-	YY = base::sum( SBCK::pairwise_distances( muY$c         , metric = metric )^p * ( pY %*% base::t(pY) ) )
+	XY = base::sum( pmetric::pairwise_distances( muX$c , muY$c , metric = metric )^p * ( pX %*% base::t(pY) ) )
+	XX = base::sum( pmetric::pairwise_distances( muX$c         , metric = metric )^p * ( pX %*% base::t(pX) ) )
+	YY = base::sum( pmetric::pairwise_distances( muY$c         , metric = metric )^p * ( pY %*% base::t(pY) ) )
 	
 	cost = (2 * XY - XX - YY)^( 1. / p )
 	invisible(cost)
