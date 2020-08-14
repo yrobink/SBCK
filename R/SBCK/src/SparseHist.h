@@ -108,7 +108,7 @@
 // Class //
 //=======//
 
-//' @export
+//' @export SparseHistBase
 class SparseHistBase
 {
 	public:

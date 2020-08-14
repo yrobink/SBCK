@@ -13,4 +13,5 @@ LazyData: true
 NeedsCompilation: yes
 Imports: Rcpp, RcppEigen, methods, R6, ROOPSD, pmetric
 LinkingTo: Rcpp, RcppEigen
+RcppModules: SBCK_cpp
 RoxygenNote: 7.1.1

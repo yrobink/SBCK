@@ -96,6 +96,6 @@
 NULL
 
 
-#loadModule("SBCK_cpp", TRUE)
+loadModule("SBCK_cpp", TRUE)
 
 
