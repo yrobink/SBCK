@@ -95,6 +95,7 @@ library(roxygen2)
 library(ggplot2)
 library(gridExtra)
 library(ROOPSD)
+library(pmetric)
 
 try(roxygen2::roxygenize("../R/SBCK"))
 devtools::load_all("../R/SBCK")
@@ -184,18 +185,6 @@ plt = PlotTools$new()
 ## Test tools
 ##===========
 
-test_pairwise_distances = function( show = FALSE )##{{{
-{
-	X = matrix( stats::rnorm(200) , nrow = 100 , ncol = 2 )
-	Y = matrix( stats::rexp(200)  , nrow = 100 , ncol = 2 )
-	
-	distXY  = SBCK::pairwise_distances( X , Y ) 
-	distX   = SBCK::pairwise_distances(X)
-	ldistXY = SBCK::pairwise_distances( X , Y , "sqeuclidean" )
-	ndistXY = SBCK::pairwise_distances( X , Y , function( x , y ) { return(-1) } ) ## Stupid distance, just to check if == -1 for all values
-}
-##}}}
-
 test_SparseHist = function( show = FALSE )##{{{
 {
 	X = base::cbind( stats::rnorm(100000) , stats::rexp(100000) )
@@ -220,7 +209,7 @@ test_OT = function( show = FALSE )##{{{
 	bw = base::c(0.1)
 	muX = SBCK::SparseHist( X , bw )
 	muY = SBCK::SparseHist( Y , bw )
-	distXY = SBCK::pairwise_distances( muX$c , muY$c )
+	distXY = pmetric::pairwise_distances( muX$c , muY$c )
 	
 	ot = OTNetworkSimplex$new()
 	ot$fit( muX , muY )
@@ -657,7 +646,6 @@ test_MBCn = function( show = FALSE )##{{{
 run_all_tests = function( show = FALSE )##{{{
 {
 	## Tools tests
-	test_pairwise_distances(show)
 	test_SparseHist(show)
 	test_OT(show)
 	test_shuffle(show)
