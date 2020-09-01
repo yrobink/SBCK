@@ -179,7 +179,12 @@ class OTC:
 	
 	def predict( self , X0 ):##{{{
 		"""
-		Perform the bias correction
+		Perform the bias correction.
+		
+		Note: Only the center of the bins associated to the corrected points are
+		returned, but all corrections of the form:
+		>> otc.predict(X0) + np.random.uniform( low = - otc.bin_width / 2 , high = otc.bin_width / 2 , size = X0.shape[0] )
+		are equivalent for OTC.
 		
 		Parameters
 		----------

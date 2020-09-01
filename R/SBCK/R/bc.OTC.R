@@ -204,6 +204,15 @@ OTC = R6::R6Class( "OTC" ,
 	## predict ##{{{
 	#' @description
     #' Predict the correction
+	#'
+	#' Note: Only the center of the bins associated to the corrected points are
+	#' returned, but all corrections of the form:
+	#' >> bw = otc$bin_width / 2
+	#' >> n  = base::prod(base::dim(X0))
+	#' >> Z0 = otc$predict(X0)
+	#' >> Z0 = Z0 + t(matrix(stats::runif( n = n min = - bw , max = bw ) , ncol = dim(X0)[1] ))
+	#' are equivalent for OTC.
+	#'
     #' @param X0 [matrix: n_samples * n_features or NULL] Model in calibration
     #'
     #' @return [matrix] Return the corrections of X0

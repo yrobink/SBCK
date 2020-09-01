@@ -229,6 +229,15 @@ dOTC = R6::R6Class( "dOTC" ,
 	## predict ##{{{
 	#' @description
     #' Predict the correction
+    #'
+	#' Note: Only the center of the bins associated to the corrected points are
+	#' returned, but all corrections of the form:
+	#' >> bw = dotc$bin_width / 2
+	#' >> n  = base::prod(base::dim(X1))
+	#' >> Z1 = dotc$predict(X1)
+	#' >> Z1 = Z1 + t(matrix(stats::runif( n = n min = - bw , max = bw ) , ncol = dim(X1)[1] ))
+	#' are equivalent for OTC.
+	#'
     #' @param X0 [matrix: n_samples * n_features or NULL] Model in calibration
     #' @param X1 [matrix: n_samples * n_features] Model in projection
     #' @return [matrix or list] Return the matrix of correction of X1 if X0 is

@@ -235,6 +235,11 @@ class dOTC:
 		Perform the bias correction
 		Return Z1 if X0 is None, else return a tuple Z1,Z0
 		
+		Note: Only the center of the bins associated to the corrected points are
+		returned, but all corrections of the form:
+		>> dotc.predict(X1) + np.random.uniform( low = - dotc.bin_width / 2 , high = dotc.bin_width / 2 , size = X1.shape[0] )
+		are equivalent for dOTC.
+		
 		Parameters
 		----------
 		X1  : np.array[ shape = (n_samples,n_features) ]
