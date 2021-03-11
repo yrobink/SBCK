@@ -82,47 +82,59 @@
 ################################################################################
 ################################################################################
 
-#' Energy distance
+###############
+## Functions ##
+###############
+
+
+#' Pairwise distances
 #'
-#' Compute Energy distance between two dataset or SparseHist X and Y
+#' Compute the matrix of pairwise distances between a matrix X and a matrix Y
+#' 
+#' @usage pairwise_distances(X,Y,metric)
+#' @param X [matrix] A first matrix (samples in row, features in columns).
+#' @param Y [matrix] A second matrix (samples in row, features in columns).
+#'        If Y = NULL, then pairwise distances is computed between X and X
+#' @param metric [string or callable] The metric used. If metric is a string,
+#'        then metric is compiled (so faster). Available string are:
+#'        "euclidean", "sqeuclidean" (Square of Euclidean distance),
+#'        "logeulidean" (log of the Euclidean distance) and "chebyshev" (max). 
+#'        Callable must be a function taking two vectors and returning a double.
 #'
-#' @param X [matrix or SparseHist] If matrix, dim = ( nrow = n_samples, ncol =
-#'        n_features)
-#' @param Y [matrix or SparseHist] If matrix, dim = ( nrow = n_samples, ncol =
-#'        n_features)
-#' @param p [float] power of energy distance, default is 2.
-#' @param metric [str or function] metric for pairwise distance, default is
-#'        "euclidean", see SBCK::pairwise_distances
-#'        
-#' @return [float] value of distance
+#' @return distXY [matrix] Pairwise distances. distXY[i,j] is the distance 
+#'         between X[i,] and Y[j,]
 #'
 #' @examples
-#' X = base::cbind( stats::rnorm(2000) , stats::rnorm(2000)  )
-#' Y = base::cbind( stats::rnorm(2000,mean=10)  , stats::rnorm(2000) )
-#' bw = base::c(0.1,0.1)
-#' muX = SBCK::SparseHist( X , bw )
-#' muY = SBCK::SparseHist( Y , bw )
-#' 
-#' ## The four are equals
-#' w2 = SBCK::energy(X,Y)
-#' w2 = SBCK::energy(muX,Y)
-#' w2 = SBCK::energy(X,muY)
-#' w2 = SBCK::energy(muX,muY)
+#' X = matrix( stats::rnorm(200) , ncol = 100 , nrow = 2 )
+#' Y = matrix( stats::rexp(300)  , ncol = 150 , nrow = 2 )
+#'
+#' distXY = SBCK::pairwise_distances( X , Y ) 
 #'
 #' @export
-energy = function( X , Y , p = 2 , metric = "euclidean" )
+pairwise_distances = function( X , Y = NULL , metric = "euclidean" )
 {
-	mu = SBCK::data_to_hist(X,Y)
-	muX = mu$muX
-	muY = mu$muY
-	
-	pX = matrix( muX$p , nrow = muX$n_samples , ncol = 1 )
-	pY = matrix( muY$p , nrow = muY$n_samples , ncol = 1 )
-	
-	XY = base::sum( SBCK::pairwise_distances( muX$c , muY$c , metric = metric )^p * ( pX %*% base::t(pY) ) )
-	XX = base::sum( SBCK::pairwise_distances( muX$c         , metric = metric )^p * ( pX %*% base::t(pX) ) )
-	YY = base::sum( SBCK::pairwise_distances( muY$c         , metric = metric )^p * ( pY %*% base::t(pY) ) )
-	
-	cost = (2 * XY - XX - YY)^( 1. / p )
-	invisible(cost)
+	if( is.null(Y) )
+	{
+		if( is.character(metric) )
+		{
+			return( SBCK::cpp_pairwise_distances_Xstr( X , metric ) )
+		}
+		if( is.function(metric) )
+		{
+			return( SBCK::cpp_pairwise_distances_XCall( X , metric ) )
+		}
+	}
+	else
+	{
+		if( is.character(metric) )
+		{
+			return( SBCK::cpp_pairwise_distances_XYstr( X , Y , metric ) )
+		}
+		if( is.function(metric) )
+		{
+			return( SBCK::cpp_pairwise_distances_XYCall( X , Y , metric ) )
+		}
+	}
 }
+
+

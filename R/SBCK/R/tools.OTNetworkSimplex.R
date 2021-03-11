@@ -156,7 +156,7 @@ OTNetworkSimplex = R6::R6Class( "OTNetworkSimplex" ,
 	{
 		self$C = C
 		if( is.null(self$C) )
-			self$C = pmetric::pairwise_distances( muX0$c , muX1$c )^self$p
+			self$C = SBCK::pairwise_distances( muX0$c , muX1$c )^self$p
 		out = SBCK::network_simplex( muX0$p , muX1$p , self$C )
 		self$plan    = out$plan
 		self$success = out$success == TRUE
