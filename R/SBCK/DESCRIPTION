@@ -1,7 +1,7 @@
 Package: SBCK
 Type: Package
 Title: Statistical Bias Correction Kit
-Version: 0.3.0
+Version: 0.3.1
 Date: 2020-08-06
 Authors@R: person("Yoann", "Robin", email = "yoann.robin.k@gmail.com", role = c("aut", "cre"))
 Description: This package contains many methods of Bias Correction.
