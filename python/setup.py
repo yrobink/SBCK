@@ -240,7 +240,7 @@ list_packages = [
 setup(
 	name = "SBCK" ,
 	description = "Statistical Bias Correction Kit" ,
-	version = "0.2.2" ,
+	version = "0.3.1" ,
 	author = "Yoann Robin" ,
 	author_email = "yoann.robin.k@gmail.com" ,
 	license = "CeCILL-C" ,
