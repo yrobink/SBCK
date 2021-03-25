@@ -88,6 +88,9 @@
 #'
 #' @docType package
 #' @author Yoann Robin Maintainer: Yoann Robin <yoann.robin.k@gmail.com>
+#' @import methods
+#' @import ROOPSD
+#' @import R6
 #' @import Rcpp
 #' @import RcppEigen
 #' @importFrom Rcpp evalCpp

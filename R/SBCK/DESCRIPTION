@@ -2,9 +2,15 @@ Package: SBCK
 Type: Package
 Title: Statistical Bias Correction Kit
 Version: 0.3.1
-Date: 2020-08-06
+Date: 2021-03-25
 Authors@R: person("Yoann", "Robin", email = "yoann.robin.k@gmail.com", role = c("aut", "cre"))
-Description: This package contains many methods of Bias Correction.
+Description: This library implements several recent bias correction methods with
+             a unified interface to facilitate their use. In addition, a high
+             dimensional hollow histogram algorithm is provided for the OTC and
+             dOTC methods. The QM method has been implemented in the most
+             generic way possible: the laws of the biased/reference data can be
+             estimated parametrically or non-parametrically, with or without
+             fixing the law.
 URL: https://github.com/yrobink/SBCK
 Depends: R (>= 3.3)
 License: CeCILL-2
