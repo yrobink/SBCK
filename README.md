@@ -87,41 +87,24 @@ and projection period.
 ### Bivariate bias correction: MRec
 ![Alt](/figures/multivariate_MRec.png)
 
-## Licence
+## License
 
-Copyright Yoann Robin, 2019
+Copyright(c) 2021 Yoann Robin
 
-This software is a computer program that is part of the SBCK (Statistical
-Bias Correction Kit). This library makes it possible to perform bias
-correction with non parametric methods, and give some metrics between Sparse
-Histogram is high dimensions.
+This file is part of SBCK.
 
-This software is governed by the CeCILL-C license under French law and
-abiding by the rules of distribution of free software.  You can  use,
-modify and/ or redistribute the software under the terms of the CeCILL-C
-license as circulated by CEA, CNRS and INRIA at the following URL
-"http://www.cecill.info".
+SBCK is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-As a counterpart to the access to the source code and  rights to copy,
-modify and redistribute granted by the license, users are provided only
-with a limited warranty  and the software's author,  the holder of the
-economic rights,  and the successive licensors  have only  limited
-liability.
+SBCK is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-In this respect, the user's attention is drawn to the risks associated
-with loading,  using,  modifying and/or developing or reproducing the
-software by the user in light of its specific status of free software,
-that may mean  that it is complicated to manipulate,  and  that  also
-therefore means  that it is reserved for developers  and  experienced
-professionals having in-depth computer knowledge. Users are therefore
-encouraged to load and test the software's suitability as regards their
-requirements in conditions enabling the security of their systems and/or
-data to be ensured and,  more generally, to use and operate it in the
-same conditions as regards security.
-
-The fact that you are presently reading this means that you have had
-knowledge of the CeCILL-C license and that you accept its terms.
-
+You should have received a copy of the GNU General Public License
+along with SBCK.  If not, see <https://www.gnu.org/licenses/>.
 
 ## References
 - [[1]](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2011WR011524) Bárdossy, A. and Pegram, G.: Multiscale spatial recorrelation of RCM precipitation to produce unbiased climate change scenarios over large areas and small, Water Resources Research, 48, 9502–, https://doi.org/10.1029/2011WR011524, 2012.
