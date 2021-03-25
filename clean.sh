@@ -92,9 +92,10 @@ rm -rf python/var
 
 
 ## Delete R temporary files
-rm -f R/SBCK/man/*.Rd
 rm -f R/SBCK/R/RcppExports.R
 rm -f R/SBCK/src/*.so
 rm -f R/SBCK/src/*.o
 rm -f R/SBCK/src/RcppExports.cpp
 rm -f R/*.tar.gz
+rm -rf R/SBCK.Rcheck
+rm -f R/*.pdf
