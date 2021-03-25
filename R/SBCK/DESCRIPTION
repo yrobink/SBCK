@@ -13,7 +13,7 @@ Description: This library implements several recent bias correction methods with
              fixing the law.
 URL: https://github.com/yrobink/SBCK
 Depends: R (>= 3.3)
-License: CeCILL-2
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: yes
