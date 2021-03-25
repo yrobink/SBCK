@@ -12,3 +12,6 @@ RcppExports.R
 build
 dist
 R/*.tar.gz
+R/*.Rcheck
+R/.Rd2pdf*
+R/*.pdf
