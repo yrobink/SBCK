@@ -26,7 +26,6 @@
 #' @import ROOPSD
 #' @import R6
 #' @import Rcpp
-#' @import RcppEigen
 #' @importFrom Rcpp evalCpp
 #' @useDynLib SBCK, .registration=TRUE
 #' @name SBCK

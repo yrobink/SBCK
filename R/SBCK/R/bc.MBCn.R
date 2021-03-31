@@ -33,7 +33,7 @@
 #' @examples
 #' ## Three bivariate random variables (rnorm and rexp are inverted between ref
 #' ## and bias)
-#' XY = SBCK::dataset_gaussian_exp_2d(2000)
+#' XY = SBCK::dataset_gaussian_exp_2d(200)
 #' X0 = XY$X0 ## Biased in calibration period
 #' Y0 = XY$Y0 ## Reference in calibration period
 #' X1 = XY$X1 ## Biased in projection period
