@@ -19,9 +19,6 @@
 ################################################################################
 ################################################################################
 ##                                                                            ##
-## Original author  : Mathieu Vrac                                            ##
-## Contact          : mathieu.vrac@lsce.ipsl.fr                               ##
-##                                                                            ##
 ## Notes   : CDFt is the re-implementation of the function CDFt of R package  ##
 ##           "CDFt" developped by Mathieu Vrac, available at                  ##
 ##           https://cran.r-project.org/web/packages/CDFt/index.html          ##

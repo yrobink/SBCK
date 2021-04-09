@@ -3,14 +3,12 @@ Type: Package
 Title: Statistical Bias Correction Kit
 Version: 0.3.1
 Date: 2021-03-31
-Authors@R: person("Yoann", "Robin", email = "yoann.robin.k@gmail.com", role = c("aut", "cre"))
-Description: This library implements several recent bias correction methods with
-             a unified interface to facilitate their use. In addition, a high
-             dimensional sparse histogram algorithm is provided for the OTC and
-             dOTC methods. The QM method has been implemented in the most
-             generic way possible: the laws of the biased/reference data can be
-             estimated in a parametric or non-parametric way, with or without
-             fixing the law.
+Authors@R: c( person("Yoann"  , "Robin", email = "yoann.robin.k@gmail.com"  , role = c("aut", "cre")),
+			  person("Mathieu", "Vrac" , email = "mathieu.vrac@lsce.ipsl.fr", role = c("cph")) )
+Description: Implementation of several recent multivariate bias correction
+			 methods with a unified interface to facilitate their use. A
+			 description and comparison between methods can be found in François
+			 et al, (2020) <doi:10.5194/esd-11-537-2020>.
 URL: https://github.com/yrobink/SBCK
 Depends: R (>= 3.3)
 License: GPL-3
