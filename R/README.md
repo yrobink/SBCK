@@ -33,6 +33,8 @@ this article for further interpretation.
 
 ## R instruction
 
+SBCK is available in [CRAN](https://cran.r-project.org/web/packages/SBCK/index.html).
+
 Requires:
 - R
 - roxygen2 (>= 7.0.0)
