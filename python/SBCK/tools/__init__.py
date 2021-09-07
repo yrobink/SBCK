@@ -31,6 +31,6 @@ from .__rv_extend             import rv_histogram
 from .__rv_extend             import rv_ratio_histogram
 from .__rv_extend             import rv_density
 from .__rv_extend             import rv_mixture
-
+from .__Shift                 import Shift
 
 
