@@ -12,6 +12,7 @@
 - QDM method [3]
 - MRec method [1]
 - ECBC method [12]
+- TSMBC method [15], for autocorrelations.
 
 ## How to select a bias correction method ?
 
@@ -85,5 +86,6 @@ along with SBCK.  If not, see <https://www.gnu.org/licenses/>.
 - [[12]](https://doi.org/10.1175/JCLI-D-14-00059.1) Vrac, M. and P. Friederichs, 2015: Multivariate—Intervariable, Spatial, and Temporal—Bias Correction. J. Climate, 28, 218–237, https://doi.org/10.1175/JCLI-D-14-00059.1
 - [13] Wasserstein, L. N. (1969). Markov processes over denumerable products of spaces describing large systems of automata. Problems of Information Transmission, 5(3), 47-52.
 - [[14]](https://doi.org/10.1023/B:CLIM.0000013685.99609.9e) Wood, A. W., Leung, L. R., Sridhar, V., and Lettenmaier, D. P.: Hydrologic Implications of Dynamical and Statistical Approaches to Downscaling Climate Model Outputs, Clim. Change, 62, 189–216, https://doi.org/10.1023/B:CLIM.0000013685.99609.9e, 2004.
+- [[15]](https://doi.org/10.5194/esd-2021-12) Robin, Y. and Vrac, M.: Is time a variable like the others in multivariate statistical downscaling and bias correction?, Earth Syst. Dynam. Discuss. [preprint], https://doi.org/10.5194/esd-2021-12, in review, 2021.
 - François, B., Vrac, M., Cannon, A., Robin, Y., and Allard, D.: Multivariate bias corrections of climate simulations: Which benefits for which losses?, Earth Syst. Dyn., 11, 537–562, https://doi.org/10.5194/esd-11-537-2020, https://esd.copernicus.org/articles/11/537/2020/, 2020.
 

@@ -38,6 +38,10 @@ class TSMBC:
 	Description
 	-----------
 	Time Shifted Multivariate Bias Correction.
+	
+	References
+	----------
+	[1] Robin, Y. and Vrac, M.: Is time a variable like the others in multivariate statistical downscaling and bias correction?, Earth Syst. Dynam. Discuss. [preprint], https://doi.org/10.5194/esd-2021-12, in review, 2021.
 	"""
 	
 	def __init__( self , lag , bc_method = OTC , method = "row" , ref = "middle" , **kwargs ):##{{{
