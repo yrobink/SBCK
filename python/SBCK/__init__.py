@@ -17,17 +17,19 @@
 ## You should have received a copy of the GNU General Public License
 ## along with SBCK.  If not, see <https://www.gnu.org/licenses/>.
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 
-from .__RBC   import RBC
-from .__QM    import QM
-from .__CDFt  import CDFt
-from .__OTC   import OTC
-from .__dOTC  import dOTC
-from .__ECBC  import ECBC
-from .__QMrs  import QMrs
-from .__R2D2  import R2D2
-from .__QDM   import QDM
-from .__MBCn  import MBCn
-from .__MRec  import MRec
+from .__RBC    import RBC
+from .__QM     import QM
+from .__CDFt   import CDFt
+from .__OTC    import OTC
+from .__dOTC   import dOTC
+from .__ECBC   import ECBC
+from .__QMrs   import QMrs
+from .__R2D2   import R2D2
+from .__QDM    import QDM
+from .__MBCn   import MBCn
+from .__MRec   import MRec
+from .__TSMBC  import TSMBC
+from .__dTSMBC import dTSMBC
 

@@ -108,7 +108,7 @@ class AR:##{{{
 		ax.set_xlim( (0,nlags) )
 		ax.set_ylim( (-1,1) )
 		ax.set_xticks( np.arange(0,nlags,1) + 0.5 )
-		ax.set_xticklabels( np.arange(1,nlags+1,1,dtype=np.int) )
+		ax.set_xticklabels( np.arange(1,nlags+1,1,dtype=int) )
 	##}}}
 ##}}}
 
@@ -498,7 +498,7 @@ def test_MRec( plot = True ):##{{{
 		plt.show()
 ##}}}
 
-def test_tsbc( plot = True ):##{{{
+def test_TSMBC( plot = True ):##{{{
 	size = 2000
 	
 	## Generate AR3 processes
@@ -512,7 +512,7 @@ def test_tsbc( plot = True ):##{{{
 	
 	## Bias correction
 	##================
-	nlags = 50
+	nlags = 20
 	
 	tsbc = bc.TSBC( lag = nlags )
 	tsbc.fit( Y , X )
@@ -548,7 +548,7 @@ def test_tsbc( plot = True ):##{{{
 		ax.plot( bins , kde_X(bins) , color = "red" , label = r"$X$" )
 		for i,kde_Z in enumerate(lkde_Z):
 			if i == len(lkde_Z) - 1:
-				ax.plot( bins , kde_Z(bins) , color = greens[i] , label = "OTC" )
+				ax.plot( bins , kde_Z(bins) , color = greens[i] , label = "TSMBC" )
 			else:
 				ax.plot( bins , kde_Z(bins) , color = greens[i] )
 		ax.plot( bins , kde_Y(bins) , color = "blue" , marker = "" , label = r"$Y$" )
@@ -596,17 +596,16 @@ def test_metrics():##{{{
 ##}}}
 
 
-
 def run_all_test( plot = False ):##{{{
-	test_qm(          plot = plot )
-	test_otc_univ(    plot = plot )
-	test_otc_biv(     plot = plot )
-	test_ECBC(        plot = plot )
-	test_qmrs(        plot = plot )
-	test_QDM(         plot = plot )
-	test_MBCn(        plot = plot )
-	test_MRec(        plot = plot )
-#	test_tsbc(        plot = plot )
+#	test_qm(       plot = plot )
+#	test_otc_univ( plot = plot )
+#	test_otc_biv(  plot = plot )
+#	test_ECBC(     plot = plot )
+#	test_qmrs(     plot = plot )
+#	test_QDM(      plot = plot )
+#	test_MBCn(     plot = plot )
+#	test_MRec(     plot = plot )
+	test_TSMBC(    plot = plot )
 #	test_metrics()
 ##}}}
 
@@ -620,7 +619,6 @@ if __name__ == "__main__":
 	
 	print(bc.__version__)
 	np.random.seed(42)
-	
 	
 	## Run tests
 	##==========
