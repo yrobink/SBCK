@@ -597,16 +597,16 @@ def test_metrics():##{{{
 
 
 def run_all_test( plot = False ):##{{{
-#	test_qm(       plot = plot )
-#	test_otc_univ( plot = plot )
-#	test_otc_biv(  plot = plot )
-#	test_ECBC(     plot = plot )
-#	test_qmrs(     plot = plot )
-#	test_QDM(      plot = plot )
-#	test_MBCn(     plot = plot )
-#	test_MRec(     plot = plot )
+	test_qm(       plot = plot )
+	test_otc_univ( plot = plot )
+	test_otc_biv(  plot = plot )
+	test_ECBC(     plot = plot )
+	test_qmrs(     plot = plot )
+	test_QDM(      plot = plot )
+	test_MBCn(     plot = plot )
+	test_MRec(     plot = plot )
 	test_TSMBC(    plot = plot )
-#	test_metrics()
+	test_metrics()
 ##}}}
 
 
