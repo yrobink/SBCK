@@ -252,3 +252,181 @@ SchaakeShuffleRef = R6::R6Class( "SchaakeShuffleRef" ,
 )
 ##}}}
 
+## SchaakeShuffleMultiRef ##{{{
+
+#' ShaakeShuffleMultiRef class
+#'
+#' @description
+#' Match the rank structure of X with them of Y by reordering X.
+#'
+#' @details
+#' Can keep multiple features to keep the structure of X.
+#'
+#' @param lag_search An integer corresponding to the number of time lags to
+#' account for when searching in \code{refdata} the best analogue of the
+#' conditioning dimension rank association observed in \code{bc1d}. The default
+#' value is no lag, i.e., \code{lag_search}=0.
+#' @param lag_keep An integer corresponding to the number of time lags to keep
+#' in the correction for each best analogue of rank associations found.
+#' \code{lag_keep} has to be lower or equal to \code{lag_search}.  The default
+#' value is no lag, i.e., \code{lag_search}=0.
+#'
+#' @examples
+#' X0 = matrix( stats::runif(50) , ncol = 2 )
+#' Y0 = matrix( stats::runif(50) , ncol = 2 )
+#' ssmr = SchaakeShuffleMultiRef$new( lag_search = 3 , lag_keep = 1 , cond_cols = 1 )
+#' ssmr$fit(Y0)
+#' Z0 = ssmr$predict(X0)
+#'
+#' @export
+SchaakeShuffleMultiRef = R6::R6Class( "SchaakeShuffleMultiRef" ,
+	
+	public = list(
+	
+	###############
+	## Arguments ##
+	###############
+	
+	#' @field cond_cols [vector of integer] The conditioning columns
+	cond_cols  = NULL,
+	#' @field lag_search [integer] Number of lag to take into account
+	lag_search = NULL,
+	#' @field lag_keep [integer] Number of lag to keep
+	lag_keep   = NULL,
+	#' @field Y0 [matrix] Reference data
+	Y0         = NULL,
+	
+	#################
+	## Constructor ##
+	#################
+	
+	## Init  ##{{{
+	#' @description
+    #' Create a new ShaakeShuffleMultiRef object.
+	#' @param cond_cols [vector of integer] The conditioning columns
+	#' @param lag_search [integer] Number of lag to take into account
+	#' @param lag_keep [integer] Number of lag to keep
+	#'
+	#' @return A new `ShaaleShuffleMultiRef` object.
+	initialize = function( lag_search , lag_keep , cond_cols = base::c(1) )
+	{
+		self$cond_cols  = cond_cols
+		self$lag_search = lag_search
+		self$lag_keep   = lag_keep
+	},
+	##}}}
+	
+	## Fit  ##{{{
+	#' @description
+    #' Fit the model
+	#' @param Y0 [vector] The reference vector
+	#'
+	#' @return NULL
+	fit = function(Y0)
+	{
+		self$Y0 = Y0
+		if( !is.matrix(Y0) ) self$Y0 = matrix( Y0 , nrow = length(Y0) , ncol = 1 )
+	},
+	##}}}
+	
+	## predict  ##{{{
+	#' @description
+    #' Fit the model
+	#' @param X0 [vector] The vector to apply shuffle
+	#'
+	#' @return Z0 [vector] data shuffled
+	predict = function(X0)
+	{
+		## Reorganize data
+		if( !is.matrix(X0) ) X0 = matrix( X0 , nrow = length(X0) , ncol = 1 )
+		
+		## If nrow(X0) != nrow(Y0), extend data with a resampling
+		YY = NULL
+		XX = NULL
+		nrowY0 = base::nrow(self$Y0)
+		nrowX0 = base::nrow(X0)
+		n_features = base::ncol(self$Y0)
+		if( nrowY0 < nrowX0 )
+		{
+			YY = matrix( NA , nrow = nrowX0 , ncol = n_features )
+			YY[1:nrowY0,] = private$Y0
+			YY[nrowY0:nrowX0,] = self$Y0[base::sample( nrowY0 , nrowX0 - nrowY0 , replace = TRUE ),]
+			XX = X0
+		}
+		else if( nrowX0 < nrowY0 )
+		{
+			XX = matrix( NA , nrow = nrowY0 , ncol = n_features )
+			XX[1:nrowX0,] = X0
+			XX[nrowX0:nrowY0,] = X0[base::sample( nrowX0 , nrowY0 - nrowX0 , replace = TRUE ),]
+			YY = self$Y0
+		}
+		else
+		{
+			XX = X0
+			YY = self$Y0
+		}
+		n_samples  = nrow(XX)
+		
+		ZZ   = array(NaN, dim = dim(XX)) # (N days x P var)
+		ZZ_s = apply(XX, 2, sort)
+		ZZ_r = apply(XX, 2, rank, ties.method = "min")
+		YY_r = apply(YY, 2, rank, ties.method = "min")
+		
+		ranks_conddim_REF = YY_r[, self$cond_cols, drop = FALSE]
+		ranks_conddim_BC  = ZZ_r[, self$cond_cols, drop = FALSE]
+		
+		nsearch <- ((n_samples - self$lag_search - 1) %/% (self$lag_keep + 1)) + (((n_samples - self$lag_search - 1) %% (self$lag_keep + 1)) > 0) + 1
+		
+		time_bestanalogue = numeric(length = nsearch)
+		dist_bestanalogue = numeric(length = nsearch)
+		visited_time      = numeric(length = n_samples)
+		
+		## block search in matrix
+		iBS = toeplitz(1:n_samples)[seq(self$lag_search+1,n_samples,self$lag_keep+1),(self$lag_search+1):1]
+		if( iBS[nrow(iBS),ncol(iBS)] < n_samples )
+			iBS = rbind( iBS , (n_samples-self$lag_search):n_samples )
+		
+		## pairwise distances
+		A = toeplitz(as.vector(ranks_conddim_REF))[(ncol(iBS)):nrow(ranks_conddim_REF),(ncol(iBS)):1]
+		B = matrix( ranks_conddim_BC[as.vector(iBS),] , ncol = ncol(iBS) )
+		D = SBCK::pairwise_distances( B , A )
+		
+		## Correction
+		dist_be  = base::apply( D , 1 , base::min )
+		time_be  = base::apply( D , 1 , base::which.min ) + ncol(iBS) - 1
+		vis_time = numeric(n_samples)
+		
+		## The first line
+		ibk = iBS[1,]
+		ibr = (time_be[1] - length(ibk)+1):time_be[1]
+		for( i in 1:n_features )
+			ZZ[ibk,i] = ZZ_s[YY_r[ibr,i],i]
+		
+		## iblockref and iblockkeep in matrix, except the first line
+		iBK = iBS[2:nrow(iBS),(ncol(iBS)-self$lag_keep):ncol(iBS)]
+		iBR = base::t(apply( matrix(time_be[2:length(time_be)],nrow = length(time_be) -1 ) , 1 , function(x) { (x-self$lag_keep):x } ))
+		## RR = Rank Ref
+		RR = YY_r[as.vector(base::t(iBR)),]
+		## Use rbind to add false index to have the same dimension that ZZ_s, add k*n_samples at each col to have the good uni-dim index
+		RR = base::t(base::t(rbind( RR , matrix( 1 , nrow = self$lag_search + 1 , ncol = n_features ) )) + seq(0,n_samples*(n_features-1),n_samples))
+		## Now RR can be used in uni-dim, and remove last "false" index.
+		ZZ[as.vector(base::t(iBK)),] = matrix( ZZ_s[as.vector(RR)] , ncol = n_features )[-seq(n_samples-self$lag_search,n_samples),]
+		
+		## Compute visited time
+		table_visited = table(as.vector(iBR))
+		idx           = as.integer(names(table_visited))
+		vis_time[idx] = as.vector(table_visited)
+		vis_time[ibr] = vis_time[ibr] + 1
+		
+		## Shuffled data
+		Z = ZZ[1:nrowX0,]
+		
+		return(Z)
+	}
+	##}}}
+	
+	)
+	
+)
+##}}}
+
