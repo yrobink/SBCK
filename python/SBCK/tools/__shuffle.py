@@ -40,7 +40,7 @@
 
 import numpy       as np
 import scipy.stats as sc
-
+from .__rv_extend import mrv_histogram
 
 #############
 ## Classes ##
