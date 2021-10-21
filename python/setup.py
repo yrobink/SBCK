@@ -174,7 +174,7 @@ list_packages = [
 setup(
 	name = "SBCK" ,
 	description = "Statistical Bias Correction Kit" ,
-	version = "0.4.0" ,
+	version = "0.4.1" ,
 	author = "Yoann Robin" ,
 	author_email = "yoann.robin.k@gmail.com" ,
 	license = "GNU-GPL3" ,
