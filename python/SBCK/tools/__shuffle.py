@@ -38,8 +38,10 @@
 ## Libraries ##
 ###############
 
-import numpy       as np
-import scipy.stats as sc
+import numpy        as np
+import scipy.stats  as sc
+import scipy.linalg as scl
+import scipy.spatial.distance as ssd
 from .__rv_extend import mrv_histogram
 
 #############
@@ -317,7 +319,6 @@ class MVQuantilesShuffle: ##{{{
 		## lag_search - n_last is the numbers of last missing values.
 		n_last = self.lag_search - (n_samplesX - (bsXc.shape[0] - 1) * self.lag_keep)
 		qZuc = np.vstack( [ self.qY[:,self.col_ucond][i:(i+self.lag_keep),:] for i in idx_bsc[:-1] ] + [self.qY[:,self.col_ucond][(idx_bsc[-1]+n_last):(idx_bsc[-1]+self.lag_search),:]] )
-		print(qZuc.shape)
 		
 		## Now build qZ
 		qZ_unordered = np.hstack( (qXc,qZuc) )
