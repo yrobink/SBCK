@@ -20,6 +20,7 @@
 __version__ = "0.4.1"
 
 from .__RBC    import RBC
+from .__IdBC   import IdBC
 from .__QM     import QM
 from .__CDFt   import CDFt
 from .__OTC    import OTC
