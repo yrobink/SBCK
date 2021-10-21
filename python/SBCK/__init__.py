@@ -17,7 +17,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with SBCK.  If not, see <https://www.gnu.org/licenses/>.
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 from .__RBC    import RBC
 from .__QM     import QM
@@ -32,4 +32,5 @@ from .__MBCn   import MBCn
 from .__MRec   import MRec
 from .__TSMBC  import TSMBC
 from .__dTSMBC import dTSMBC
+from .__AR2D2  import AR2D2
 
