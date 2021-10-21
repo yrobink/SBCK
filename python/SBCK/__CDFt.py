@@ -26,7 +26,7 @@
 ## Notes   : CDFt is the re-implementation of the function CDFt of R package    ##
 ##           "CDFt" developped by Mathieu Vrac, available at                    ##
 ##           https://cran.r-project.org/web/packages/CDFt/index.html            ##
-##           This code is governed by the CeCILL-C license with the             ##
+##           This code is governed by the GNU-GPL3 license with the             ##
 ##           authorization of Mathieu Vrac                                      ##
 ##                                                                              ##
 ##################################################################################

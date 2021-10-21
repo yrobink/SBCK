@@ -27,7 +27,7 @@
 ## Notes   : R2D2 is the re-implementation of the function R2D2 of R package    ##
 ##           "R2D2" developped by Mathieu Vrac and Soulivanh Thao, available at ##
 ##                                                                              ##
-##           This code is governed by the CeCILL-C license with the             ##
+##           This code is governed by the GNU-GPL3 license with the             ##
 ##           authorization of Mathieu Vrac                                      ##
 ##                                                                              ##
 ##################################################################################
