@@ -543,7 +543,7 @@ MVQuantilesShuffle = R6::R6Class( "MVQuantilesShuffle" ,
 	#' @description
     #' Transform method
     #' @param X [vector] Dataset to match the dependance structure with the Y fitted
-    #' @return NULL
+    #' @return Z The X with the quantiles structure of Y
 	transform = function(X)
 	{
 		## Parameters
