@@ -245,4 +245,47 @@ class rv_mixture:##{{{
 	
 ##}}}
 
+class mrv_histogram:##{{{
+	"""
+	SBCK.tools.mrv_histogram
+	========================
+	Multidimensional rv_histogram. Each margins is fitted separately.
+	"""
+	
+	def __init__( self ):
+		self.n_features = 0
+		self._law = []
+	
+	def fit( self , X ):
+		if X.ndim == 1:
+			X = X.reshape(-1,1)
+		self.n_features = X.shape[1]
+		for i in range(self.n_features):
+			self._law.append( rv_histogram( *rv_histogram.fit( X[:,i] ) ) )
+		
+		return self
+	
+	def rvs( self , size = 1 ):
+		return np.array( [ self._law[i].rvs(size=size) for i in range(self.n_features) ] ).T.copy()
+	
+	def cdf( self , q ):
+		q = q.reshape(-1,self.n_features)
+		return np.array( [ self._law[i].cdf(q[:,i]) for i in range(self.n_features) ] ).T.copy()
+	
+	def sf( self , q ):
+		q = q.reshape(-1,self.n_features)
+		return np.array( [ self._law[i].sf(q[:,i]) for i in range(self.n_features) ] ).T.copy()
+	
+	def ppf( self , p ):
+		p = p.reshape(-1,self.n_features)
+		return np.array( [ self._law[i].ppf(p[:,i]) for i in range(self.n_features) ] ).T.copy()
+	
+	def icdf( self , p ):
+		return self.ppf(p)
+	
+	def isf( self , p ):
+		p = p.reshape(-1,self.n_features)
+		return np.array( [ self._law[i].isf(p[:,i]) for i in range(self.n_features) ] ).T.copy()
+	
+##}}}
 
