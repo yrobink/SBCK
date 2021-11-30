@@ -91,13 +91,13 @@ class CDFt:
 		n_features: None or integer
 			Numbers of features, optional because it is determined during fit if X0 and Y0 are not None.
 		tol : float
-			Numerical tolerance, default 1e-3
-		bin_width : np.array[ shape = (n_features) ]
-			Lenght of bins for each margins. If None, length of bins are estimating during fit.
+			Numerical tolerance, default 1e-6
 		
 		"""
 		self.n_features = kwargs.get("n_features")
-		self._tol = kwargs.get("tol") if kwargs.get("tol") is not None else 1e-3
+		self._tol   = kwargs.get("tol") if kwargs.get("tol") is not None else 1e-6
+		self._dsupp = kwargs.get("dsupp") if kwargs.get("dsupp") is not None else 1000
+		self._samples_Y1 = kwargs.get("samples_Y1") if kwargs.get("samples_Y1") is not None else 10000
 		
 		self._distY0 = _Dist( dist = kwargs.get("distY0") , kwargs = kwargs.get("kwargsY0") )
 		self._distY1 = _Dist( dist = kwargs.get("distY1") , kwargs = kwargs.get("kwargsY1") )
@@ -157,7 +157,7 @@ class CDFt:
 					Y0uni = Y0[:,i] if Y0 is not None else self._distY0.law[-1].rvs(10000)
 					X0uni = X0[:,i] if X0 is not None else self._distX0.law[-1].rvs(10000)
 					X1uni = X1[:,i] if X1 is not None else self._distX1.law[-1].rvs(10000)
-					Y1 = self._infer_Y1( Y0uni , X0uni , X1uni , i )
+					Y1 = self._infer_Y1_new( Y0uni , X0uni , X1uni , i )
 				self._distY1.fit( Y1 , i )
 	##}}}
 	
@@ -271,4 +271,101 @@ class CDFt:
 		
 		return Y1
 	##}}}
-
+	
+	def _infer_Y1_new( self , Y0 , X0 , X1 , idx ):##{{{
+		samples_Y1 = self._samples_Y1
+		dsupp = self._dsupp
+		tol   = self._tol
+		
+		## Normalization
+		mY0 = np.mean(Y0)
+		mX0 = np.mean(X0)
+		mX1 = np.mean(X1)
+		sY0 = np.std(Y0)
+		sX0 = np.std(X0)
+		
+		X0s = (X0 - mX0) * sY0 / sX0 + mY0
+		X1s = (X1 - mX1) * sY0 / sX0 + mX1 + mY0 - mX0
+		
+		## CDF
+		rvY0  = self._distY0.law[idx]
+		rvX0s = self._distX0.dist[idx]( *self._distX0.dist[idx].fit( X0s.squeeze()) , **self._distX0.kwargs )
+		rvX1s = self._distX1.dist[idx]( *self._distX1.dist[idx].fit( X1s.squeeze()) , **self._distX1.kwargs )
+		
+		## Support
+		## Here the support is such that the CDF of Y0, X0s and X1s start from 0
+		## and go to 1
+		x_min = min([T.min() for T in [Y0,X0s,X1s,X0,X1]])
+		x_max = max([T.max() for T in [Y0,X0s,X1s,X0,X1]])
+		x_eps = 0.05 * (x_max - x_min)
+		x_fac = 1
+		x = np.linspace( x_min - x_fac * x_eps , x_max + x_fac * x_eps , dsupp )
+		
+		def support_test( rv , x ):
+			if not abs(rv.cdf(x[0])) < tol:
+				return False
+			if not abs(rv.cdf(x[-1])-1) < tol:
+				return False
+			return True
+		
+		while (not support_test(rvY0,x)) or (not support_test(rvX0s,x)) or (not support_test(rvX1s,x)):
+			x_fac *= 2
+			x = np.linspace( x_min - x_fac * x_eps , x_max + x_fac * x_eps , dsupp )
+		x_fac /= 2
+		dsupp = int(dsupp/1.2)
+		
+		## Loop to check the support
+		extend_support = True
+		while extend_support:
+			
+			## Support
+			extend_support = False
+			dsupp = int(dsupp*1.2)
+			x_fac *= 2
+			x = np.linspace( x_min - x_fac * x_eps , x_max + x_fac * x_eps , dsupp )
+			
+			## Inference of the CDF of Y1
+			cdfY1 = rvY0.cdf(rvX0s.ppf(rvX1s.cdf(x)))
+			
+			## Correction of the CDF, we want that the CDF of Y1 start from 0 and goto 1
+			if (not abs(cdfY1[0]) < tol):
+				## CDF not start at 0
+				idx  = np.max(np.argwhere(np.abs(cdfY1[0] - cdfY1) < tol))
+				if idx == 0:
+					extend_support = True
+				else:
+					supp_l_X0s = rvX0s.ppf(cdfY1[0]) - rvX0s.ppf(0)
+					supp_l_X1s = rvX1s.ppf(cdfY1[0]) - rvX1s.ppf(0)
+					supp_l_Y0  = rvY0.ppf(cdfY1[0])  - rvY0.ppf(0)
+					supp_l_Y1  = supp_l_Y0 * supp_l_X1s / supp_l_X0s
+					if x[idx] - supp_l_Y1 < x[0]:
+						extend_support = True
+					else:
+						idxl = np.argmin(np.abs(x - (x[idx] - supp_l_Y1)))
+						cdfY1[:idxl] = 0
+						cdfY1[idxl:idx] = rvY0.cdf( np.linspace( rvY0.ppf(0) , rvY0.ppf(cdfY1[idx]) , idx - idxl ) )
+			
+			if (not abs(cdfY1[-1] - 1) < tol):
+				## CDF not finished at 1
+				idx = np.min(np.argwhere(np.abs(cdfY1[-1] - cdfY1) < tol))
+				if idx == dsupp -1:
+					extend_support = True
+				else:
+					supp_r_X0s = rvX0s.ppf(1) - rvX0s.ppf(cdfY1[-1]) 
+					supp_r_X1s = rvX1s.ppf(1) - rvX1s.ppf(cdfY1[-1]) 
+					supp_r_Y0  = rvY0.ppf(1)  - rvY0.ppf(cdfY1[-1])  
+					supp_r_Y1  = supp_r_Y0 * supp_r_X1s / supp_r_X0s
+					if x[idx] + supp_r_Y1 > x[-1]:
+						extend_support = True
+					else:
+						idxr = np.argmin(np.abs(x - (x[idx] + supp_r_Y1)))
+						cdfY1[idxr:] = 1
+						cdfY1[idx:idxr] = rvY0.cdf( np.linspace( rvY0.ppf(cdfY1[idx]) , rvY0.ppf(1) , idxr - idx ) )
+		
+		## Draw Y1
+		icdfY1 = sci.interp1d( cdfY1 , x )
+		hY1    = icdfY1( np.random.uniform( size = samples_Y1 , low = 0 , high = 1 ) )
+		
+		return hY1
+	##}}}
+	
