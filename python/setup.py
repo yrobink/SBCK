@@ -170,22 +170,39 @@ list_packages = [
 	"SBCK.datasets"
 ]
 
+########################
+## Infos from release ##
+########################
+
+#from SBCK.__release import name
+#from SBCK.__release import description
+#from SBCK.__release import version
+#from SBCK.__release import author
+#from SBCK.__release import author_email
+#from SBCK.__release import license
+version = "0.4.2"
+name = "SBCK"
+description = "Statistical Bias Correction Kit"
+author = "Yoann Robin"
+author_email = "yoann.robin.k@gmail.com"
+license = "GNU-GPL3"
+
 
 setup(
-	name = "SBCK" ,
-	description = "Statistical Bias Correction Kit" ,
-	version = "0.4.1" ,
-	author = "Yoann Robin" ,
-	author_email = "yoann.robin.k@gmail.com" ,
-	license = "GNU-GPL3" ,
-	platforms = [ "linux" , "macosx" ] ,
-	requires = [ "numpy" , "scipy" , "matplotlib" ],
-	ext_modules = ext_modules,
+	name         = name,
+	description  = description,
+	version      = version,
+	author       = author,
+	author_email = author_email,
+	license      = license,
+	platforms        = [ "linux" , "macosx" ] ,
+	requires         = [ "numpy" , "scipy" , "matplotlib" ],
+	ext_modules      = ext_modules,
 	install_requires = ['pybind11>=2.2'],
-	cmdclass = {'build_ext': BuildExt},
-	zip_safe = False,
-	packages = list_packages,
-	package_dir = { "SBCK" : "SBCK" }
+	cmdclass         = {'build_ext': BuildExt},
+	zip_safe         = False,
+	packages         = list_packages,
+	package_dir      = { "SBCK" : "SBCK" }
 )
 
 
