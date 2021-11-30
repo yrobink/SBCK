@@ -184,7 +184,7 @@ CDFt = R6::R6Class( "CDFt" ,
 					Y0uni = if( is.null(Y0) ) self$distY0$law[[i]]$rvs(10000) else Y0[,i]
 					X0uni = if( is.null(X0) ) self$distX0$law[[i]]$rvs(10000) else X0[,i]
 					X1uni = if( is.null(X1) ) self$distX1$law[[i]]$rvs(10000) else X1[,i]
-					Y1 = private$infer_Y1( Y0uni , X0uni , X1uni , i ) ## infer Y1 here
+					Y1 = private$infer_Y1_new( Y0uni , X0uni , X1uni , i ) ## infer Y1 here
 				}
 				self$distY1$fit( Y1 , i )
 			}
@@ -328,6 +328,136 @@ CDFt = R6::R6Class( "CDFt" ,
 		Y1 = cdfY1_fct( stats::runif( n = 10000 , min = base::min(cdfY1) , max = base::max(cdfY1) ) )
 		
 		return(Y1)
+	},
+	##}}}
+	
+	infer_Y1_new = function( Y0 , X0 , X1 , idx )##{{{
+	{
+		dsupp = 1000
+		tol   = 1e-6
+		samples_Y1 = 10000
+		
+		## Normalization
+		mY0 = base::mean(Y0)
+		mX0 = base::mean(X0)
+		mX1 = base::mean(X1)
+		sY0 = stats::sd(Y0)
+		sX0 = stats::sd(X0)
+		
+		X0s = (X0 - mX0) * sY0 / sX0 + mY0
+		X1s = (X1 - mX1) * sY0 / sX0 + mX1 + mY0 - mX0
+		
+		
+		## CDF
+		rvY0  = self$distY0$law[[idx]]
+		rvX0s = base::do.call( self$distX0$dist[[idx]]$new , self$distX0$kwargs )
+		rvX0s$fit(X0s)
+		rvX1s = base::do.call( self$distX1$dist[[idx]]$new , self$distX1$kwargs )
+		rvX1s$fit(X1s)
+		
+		## Support
+		## Here the support is such that the CDF of Y0, X0s and X1s start from 0
+		## and go to 1
+		x_min = base::min(Y0,X0s,X1s,X0,X1)
+		x_max = base::max(Y0,X0s,X1s,X0,X1)
+		x_eps = 0.05 * (x_max - x_min)
+		x_fac = 1
+		x = base::seq( x_min - x_fac * x_eps , x_max + x_fac * x_eps , length = dsupp )
+		
+		support_test = function( rv , x )
+		{
+			if( !base::abs(rv$cdf(x[1])) < tol )
+				return(FALSE)
+			if( !base::abs(rv$cdf(x[length(x)])-1) < tol )
+				return(FALSE)
+			return(TRUE)
+		}
+		
+		while( !support_test(rvY0,x) || !support_test(rvX0s,x) || !support_test(rvX1s,x) )
+		{
+			x_fac = 2 * x_fac
+			x = base::seq( x_min - x_fac * x_eps , x_max + x_fac * x_eps , length = dsupp )
+		}
+		x_fac = x_fac / 2
+		dsupp = as.integer(dsupp/1.2)
+		
+		## Loop to check the support
+		extend_support = TRUE
+		while(extend_support)
+		{
+			
+			## Support
+			extend_support = FALSE
+			dsupp = as.integer(dsupp*1.2)
+			x_fac = 2*x_fac
+			x = base::seq( x_min - x_fac * x_eps , x_max + x_fac * x_eps , length = dsupp )
+			
+			## Inference of the CDF of Y1
+			cdfY1 = rvY0$cdf(rvX0s$icdf(rvX1s$cdf(x)))
+			
+			## Correction of the CDF, we want that the CDF of Y1 start from 0 and goto 1
+			if( !(base::abs(cdfY1[1]) < tol) )
+			{
+				## CDF not start at 0
+				idx  = base::max(which(base::abs(cdfY1[1] - cdfY1) < tol))
+				if( idx == 1 )
+				{
+					extend_support = TRUE
+				}
+				else
+				{
+					supp_l_X0s = rvX0s$icdf(cdfY1[1]) - rvX0s$icdf(0)
+					supp_l_X1s = rvX1s$icdf(cdfY1[1]) - rvX1s$icdf(0)
+					supp_l_Y0  = rvY0$icdf(cdfY1[1])  - rvY0$icdf(0)
+					supp_l_Y1  = supp_l_Y0 * supp_l_X1s / supp_l_X0s
+					if( x[idx] - supp_l_Y1 < x[1] )
+					{
+						extend_support = TRUE
+					}
+					else
+					{
+						idxl = base::which.min(base::abs(x - (x[idx] - supp_l_Y1)))
+						cdfY1[1:(idxl-1)] = 0
+						cdfY1[idxl:idx] = rvY0$cdf( base::seq( rvY0$icdf(0) , rvY0$icdf(cdfY1[idx]) , length = idx - idxl + 1 ) )
+					}
+				}
+			}
+			
+			size = length(cdfY1)
+			if( !(abs(cdfY1[size] - 1) < tol) )
+			{
+				## CDF not finished at 1
+				idx = base::min(which(base::abs(cdfY1[size] - cdfY1) < tol))
+				if( idx == dsupp )
+				{
+					extend_support = TRUE
+				}
+				else
+				{
+					supp_r_X0s = rvX0s$icdf(1) - rvX0s$icdf(cdfY1[size]) 
+					supp_r_X1s = rvX1s$icdf(1) - rvX1s$icdf(cdfY1[size]) 
+					supp_r_Y0  = rvY0$icdf(1)  - rvY0$icdf(cdfY1[size])  
+					supp_r_Y1  = supp_r_Y0 * supp_r_X1s / supp_r_X0s
+					if( x[idx] + supp_r_Y1 > x[size] )
+					{
+						extend_support = TRUE
+					}
+					else
+					{
+						idxr = which.min(base::abs(x - (x[idx] + supp_r_Y1)))
+						cdfY1[(idxr+1):size] = 1
+						cdfY1[idx:idxr] = rvY0$cdf( base::seq( rvY0$icdf(cdfY1[idx]) , rvY0$icdf(1) , length = idxr - idx + 1 ) )
+					}
+				}
+			}
+		}
+		
+		
+		## Draw Y1
+		icdfY1 = stats::approxfun( cdfY1 , x , ties = "ordered" )
+		hY1    = icdfY1( runif( n = samples_Y1 , min = 0 , max = 1 ) )
+		
+		return(hY1)
 	}
 	##}}}
 	
