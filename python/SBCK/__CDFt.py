@@ -103,6 +103,7 @@ class CDFt:
 		self._distY1 = _Dist( dist = kwargs.get("distY1") , kwargs = kwargs.get("kwargsY1") )
 		self._distX0 = _Dist( dist = kwargs.get("distX0") , kwargs = kwargs.get("kwargsX0") )
 		self._distX1 = _Dist( dist = kwargs.get("distX1") , kwargs = kwargs.get("kwargsX1") )
+		self._scale_tail = kwargs.get("scale_tail")
 	##}}}
 	
 	def fit( self , Y0 , X0 , X1 ):##{{{
@@ -338,6 +339,8 @@ class CDFt:
 					supp_l_X1s = rvX1s.ppf(cdfY1[0]) - rvX1s.ppf(0)
 					supp_l_Y0  = rvY0.ppf(cdfY1[0])  - rvY0.ppf(0)
 					supp_l_Y1  = supp_l_Y0 * supp_l_X1s / supp_l_X0s
+					if self._scale_tail is not None:
+						supp_l_Y1 = self._scale_tail
 					if x[idx] - supp_l_Y1 < x[0]:
 						extend_support = True
 					else:
@@ -355,6 +358,8 @@ class CDFt:
 					supp_r_X1s = rvX1s.ppf(1) - rvX1s.ppf(cdfY1[-1]) 
 					supp_r_Y0  = rvY0.ppf(1)  - rvY0.ppf(cdfY1[-1])  
 					supp_r_Y1  = supp_r_Y0 * supp_r_X1s / supp_r_X0s
+					if self._scale_tail is not None:
+						supp_l_Y1 = self._scale_tail
 					if x[idx] + supp_r_Y1 > x[-1]:
 						extend_support = True
 					else:

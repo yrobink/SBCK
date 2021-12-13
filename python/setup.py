@@ -180,7 +180,7 @@ list_packages = [
 #from SBCK.__release import author
 #from SBCK.__release import author_email
 #from SBCK.__release import license
-version = "0.4.2"
+version = "0.4.3a1"
 name = "SBCK"
 description = "Statistical Bias Correction Kit"
 author = "Yoann Robin"
