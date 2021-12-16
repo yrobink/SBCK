@@ -212,6 +212,8 @@ class CDFt:
 	
 	def _infer_Y1( self , Y0 , X0 , X1 , idx ):##{{{
 		
+		dsupp = self._dsupp
+		
 		## Normalization
 		mY0 = np.mean(Y0)
 		mX0 = np.mean(X0)
@@ -234,7 +236,7 @@ class CDFt:
 		x_max = max([T.max() for T in [Y0,X0s,X1s,X0,X1]])
 		x_eps = 0.05 * (x_max - x_min)
 		x_fac = 1
-		x = np.linspace( x_min - x_fac * x_eps , x_max + x_fac * x_eps , self._dsupp )
+		x = np.linspace( x_min - x_fac * x_eps , x_max + x_fac * x_eps , dsupp )
 		
 		def support_test( rv , x ):
 			if not abs(rv.cdf(x[0])) < self._tol:
@@ -245,7 +247,7 @@ class CDFt:
 		
 		while (not support_test(rvY0,x)) or (not support_test(rvX0s,x)) or (not support_test(rvX1s,x)):
 			x_fac *= 2
-			x = np.linspace( x_min - x_fac * x_eps , x_max + x_fac * x_eps , self._dsupp )
+			x = np.linspace( x_min - x_fac * x_eps , x_max + x_fac * x_eps , dsupp )
 		x_fac /= 2
 		
 		## Loop to check the support
@@ -283,7 +285,7 @@ class CDFt:
 			if cdfY1[-1] < p_max:
 				## CDF not finished at 1
 				idx = np.min(np.argwhere(np.abs(cdfY1[-1] - cdfY1) < self._tol))
-				if idx == self._dsupp -1:
+				if idx == dsupp -1:
 					extend_support = True
 				else:
 					if self._scale_right_tail is None:
@@ -303,9 +305,9 @@ class CDFt:
 			
 			## Support
 			if extend_support:
-				self._dsupp  = int(self._dsupp*1.2)
+				dsupp  = int(dsupp*1.2)
 				x_fac *= 2
-				x      = np.linspace( x_min - x_fac * x_eps , x_max + x_fac * x_eps , self._dsupp )
+				x      = np.linspace( x_min - x_fac * x_eps , x_max + x_fac * x_eps , dsupp )
 		
 		## Cut the support to remove identical values
 		try:
