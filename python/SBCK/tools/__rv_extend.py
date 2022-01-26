@@ -57,20 +57,72 @@ class MonotoneInverse:##{{{
 
 ##}}}
 
-class rv_histogram(sc.rv_histogram):##{{{
+#class rv_histogram(sc.rv_histogram):##{{{
+#	"""
+#	SBCK.tools.rv_histogram
+#	=======================
+#	Wrapper on scipy.stats.rv_histogram adding a fit method.
+#	"""
+#	def __init__( self , *args , **kwargs ):##{{{
+#		sc.rv_histogram.__init__( self , *args , **kwargs )
+#	##}}}
+#	
+#	def fit( X , bins = 100 ):##{{{
+#		return (np.histogram( X , bins = bins ),)
+#	##}}}
+#	
+###}}}
+
+class rv_histogram:##{{{
 	"""
 	SBCK.tools.rv_histogram
 	=======================
-	Wrapper on scipy.stats.rv_histogram adding a fit method.
+	Empirical histogram class. The difference with scipy.stats.rv_histogram
+	is the way to infer the cdf and the icdf. Here:
+	
+	>>> p = np.linspace( 0 , 1 , X.size )
+	>>> q = np.sort(X)
+	>>>
+	>>> icdf = scipy.interpolate.interp1d( p , q )
+	>>> cdf  = scipy.interpolate.interp1d( q , p )
 	"""
-	def __init__( self , *args , **kwargs ):##{{{
-		sc.rv_histogram.__init__( self , *args , **kwargs )
-	##}}}
 	
-	def fit( X , bins = 100 ):##{{{
-		return (np.histogram( X , bins = bins ),)
-	##}}}
+	def __init__( self , *args , **kwargs ):
+		if len(args) > 1:
+			self._cdf  = args[0]
+			self._icdf = args[1]
+		else:
+			self._cdf  = None
+			self._icdf = None
 	
+	def fit( X , *args , **kwargs ):
+		
+		p = np.linspace( 0 , 1 , X.size )
+		q = np.sort(X)
+		
+		icdf = sci.interp1d( p , q )
+		cdf  = sci.interp1d( q , p )
+		
+		return (cdf,icdf)
+	
+	def rvs( self , size ):
+		return self._icdf( np.random.uniform( size = size ) )
+	
+	def cdf( self , q ):
+		return self._cdf(q)
+	
+	def icdf( self , p ):
+		return self._icdf(p)
+	
+	def sf( self , q ):
+		return 1 - self._cdf(q)
+	
+	def isf( self , p ):
+		return self._icdf(1-p)
+	
+	def ppf( self , p ):
+		return self.icdf(p)
+
 ##}}}
 
 class rv_ratio_histogram(sc.rv_histogram):##{{{
@@ -288,4 +340,5 @@ class mrv_histogram:##{{{
 		return np.array( [ self._law[i].isf(p[:,i]) for i in range(self.n_features) ] ).T.copy()
 	
 ##}}}
+
 
