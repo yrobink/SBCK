@@ -64,7 +64,12 @@ def wasserstein( muX , muY , p = 2. , ot = OTNetworkSimplex() , metric = "euclid
 	ot.power = p 
 	ot.fit( muX , muY )
 	if type(ot) == OTNetworkSimplex:
-		return cost(ot)
+		w = cost(ot)
+		if not ot.state:
+			w = np.nan
+		if not abs(ot.P.sum() - 1) < 1e-6:
+			w = np.nan
+		return w
 	else:
 		costXY = cost(ot)
 		ot.fit( muX , muX )
