@@ -87,23 +87,33 @@ class rv_histogram:##{{{
 	>>> cdf  = scipy.interpolate.interp1d( q , p )
 	"""
 	
-	def __init__( self , *args , **kwargs ):
-		if len(args) > 1:
-			self._cdf  = args[0]
-			self._icdf = args[1]
-		else:
-			self._cdf  = None
-			self._icdf = None
+	def __init__( self , cdf = None , icdf = None , pdf = None , *args , X = None , **kwargs ):
+		self._cdf  = None
+		self._icdf = None
+		self._pdf  = None
+		if cdf is not None and icdf is not None:
+			self._cdf  = cdf
+			self._icdf = icdf
+			self._pdf  = pdf
+		elif X is not None:
+			cdf,icdf,pdf = rv_histogram.fit(X)
+			self._cdf  = cdf
+			self._icdf = icdf
+			self._pdf  = pdf
 	
 	def fit( X , *args , **kwargs ):
 		
 		p = np.linspace( 0 , 1 , X.size )
-		q = np.sort(X)
+		q = np.sort(X.squeeze())
 		
-		icdf = sci.interp1d( p , q )
-		cdf  = sci.interp1d( q , p )
+		icdf = sci.interp1d( p , q , bounds_error = False , fill_value = np.nan )
+		cdf  = sci.interp1d( q , p , bounds_error = False , fill_value = (0,1) )
 		
-		return (cdf,icdf)
+		h,c = np.histogram( X , int(0.1*X.size) , density = True )
+		c = (c[1:] + c[:-1]) / 2
+		pdf = sci.interp1d( c , h , bounds_error = False , fill_value = (0,0) ) 
+		
+		return (cdf,icdf,pdf)
 	
 	def rvs( self , size ):
 		return self._icdf( np.random.uniform( size = size ) )
@@ -122,7 +132,9 @@ class rv_histogram:##{{{
 	
 	def ppf( self , p ):
 		return self.icdf(p)
-
+	
+	def pdf( self , x ):
+		return self._pdf(x)
 ##}}}
 
 class rv_ratio_histogram(sc.rv_histogram):##{{{
