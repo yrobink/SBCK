@@ -20,11 +20,11 @@
 version_major = 0
 version_minor = 4
 version_patch = 3
-version_extra = "a2"
+version_extra = "a4"
 version       = "{}.{}.{}{}".format(version_major,version_minor,version_patch,version_extra)
 
-name = "SBCK" ,
-description = "Statistical Bias Correction Kit" ,
-author = "Yoann Robin" ,
-author_email = "yoann.robin.k@gmail.com" ,
-license = "GNU-GPL3" ,
+name = "SBCK"
+description = "Statistical Bias Correction Kit"
+author = "Yoann Robin"
+author_email = "yoann.robin.k@gmail.com"
+license = "GNU-GPL3"
