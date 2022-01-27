@@ -80,8 +80,12 @@ class rv_histogram:##{{{
 	Empirical histogram class. The difference with scipy.stats.rv_histogram
 	is the way to infer the cdf and the icdf. Here:
 	
-	>>> p = np.linspace( 0 , 1 , X.size )
-	>>> q = np.sort(X)
+	>>> X ## Input
+	>>> Xs = np.sort(X)
+	>>> Xr = sc.rankdata(Xs,method="max")
+	>>> p  = np.unique(Xr) / X.size
+	>>> q  = Xs[np.unique(Xr)-1]
+	>>> p[0] = 0
 	>>>
 	>>> icdf = scipy.interpolate.interp1d( p , q )
 	>>> cdf  = scipy.interpolate.interp1d( q , p )
@@ -91,7 +95,7 @@ class rv_histogram:##{{{
 		self._cdf  = None
 		self._icdf = None
 		self._pdf  = None
-		if cdf is not None and icdf is not None:
+		if cdf is not None and icdf is not None and pdf is not None:
 			self._cdf  = cdf
 			self._icdf = icdf
 			self._pdf  = pdf
@@ -103,8 +107,13 @@ class rv_histogram:##{{{
 	
 	def fit( X , *args , **kwargs ):
 		
-		p = np.linspace( 0 , 1 , X.size )
-		q = np.sort(X.squeeze())
+		Xs = np.sort(X.squeeze())
+		Xr = sc.rankdata(Xs,method="max")
+		p  = np.unique(Xr) / X.size
+		q  = Xs[np.unique(Xr)-1]
+		p[0] = 0
+#		p = np.linspace( 0 , 1 , X.size )
+#		q = np.sort(X.squeeze())
 		
 		icdf = sci.interp1d( p , q , bounds_error = False , fill_value = np.nan )
 		cdf  = sci.interp1d( q , p , bounds_error = False , fill_value = (0,1) )
