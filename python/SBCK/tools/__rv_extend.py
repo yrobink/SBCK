@@ -362,4 +362,150 @@ class mrv_histogram:##{{{
 	
 ##}}}
 
+class rv_empirical_gpd(rv_histogram):##{{{
+	"""
+	SBCK.tools.rv_empirical_gpd
+	===========================
+	Empirical histogram class where tails are given by the fit of Generalized
+	Pareto Distribution. In dev., so use with caution.
+	
+	"""
+	
+	def __init__( self , *args , X = None , p = 0.9 , **kwargs ):##{{{
+		
+		if len(args) in [5,6]:
+			super().__init__( *args )
+			self._gpd_l   = args[3]
+			self._gpd_r   = args[4]
+			if len(args) == 5:
+				self._p = p
+			else:
+				self._p = args[5]
+		elif X is not None:
+			cdf,icdf,pdf,gpd_l,gpd_r,p = rv_empirical_gpd.fit( X , p = p )
+			super().__init__( cdf , icdf , pdf )
+			self._gpd_l   = gpd_l
+			self._gpd_r   = gpd_r
+			self._p       = p
+	##}}}
+	
+	def _gpd(X):##{{{
+		m     = np.mean(X)
+		s     = np.std(X)
+		scale = m * ( m**2 / s**2 + 1 ) / 2
+		shape = 1 - scale / m
+		return scale,shape
+	##}}}
+	
+	def fit( X , *args , p = 0.9 , **kwargs ):##{{{
+		
+		## Empirical part
+		cdf,icdf,pdf = rv_histogram.fit(X)
+		
+		## Location parameter
+		loc_l = icdf(1-p)
+		loc_r = icdf(p)
+		
+		## GPD left fit
+		Xl = -(X[X<loc_l] - loc_l)
+		sc_l,sh_l = rv_empirical_gpd._gpd(Xl)
+		gpd_l = sc.genpareto( loc = - loc_l , scale = sc_l , c = sh_l )
+		
+		## GPD right fit
+		Xr = X[X>loc_r] - loc_r
+		sc_r,sh_r = rv_empirical_gpd._gpd(Xr)
+		gpd_r = sc.genpareto( loc = loc_r , scale = sc_r , c = sh_r )
+		
+		return cdf,icdf,pdf,gpd_l,gpd_r,p
+	##}}}
+	
+	def rvs( self , size = 1 ):##{{{
+		return self.icdf( np.random.uniform( size = size ) )
+	##}}}
+	
+	def cdf( self , q ):##{{{
+		q = np.array([q]).reshape(-1)
+		p = np.zeros_like(q) + np.nan
+		
+		## Empirical
+		idx = (q > self.loc_l) & (q < self.loc_r)
+		p[idx] = self._cdf(q[idx])
+		
+		## Left part
+		idx = q < self.loc_l
+		ql  = -(q[idx] - self.loc_l) - self.loc_l
+		p[idx] = (1-self._p) * self._gpd_l.sf(ql)
+		
+		## Right part
+		idx = q > self.loc_r
+		p[idx] = self._p + (1-self._p) * self._gpd_r.cdf(q[idx])
+		
+		return p
+	##}}}
+	
+	def icdf( self , p ):##{{{
+		p = np.array([p]).reshape(-1)
+		
+		q = np.zeros_like(p) + np.nan
+		
+		## Empirical part
+		idx = ( p > (1-self._p) ) & (p < self._p)
+		q[idx] = self._icdf(p[idx])
+		
+		## Left part
+		idx = p < 1 - self._p
+		q[idx] = - self._gpd_l.isf( p[idx] / (1-self._p) )
+		
+		## Right part
+		idx = p > self._p
+		q[idx] = self._gpd_r.isf( ( 1 - p[idx] ) / (1-self._p) )
+		
+		return q
+	##}}}
+	
+	def sf( self , q ):##{{{
+		return 1 - self.cdf(q)
+	##}}}
+	
+	def isf( self , p ):##{{{
+		return self.icdf(1-p)
+	##}}}
+	
+	def ppf( self , p ):##{{{
+		return self.icdf(p)
+	##}}}
+	
+	## Attributes ##{{{
+	
+	@property
+	def p(self):
+		return self._p
+	
+	@property
+	def loc_l(self):
+		return -float(self._gpd_l.kwds["loc"])
+	
+	@property
+	def loc_r(self):
+		return float(self._gpd_r.kwds["loc"])
+	
+	@property
+	def scale_l(self):
+		return float(self._gpd_l.kwds["scale"])
+	
+	@property
+	def scale_r(self):
+		return float(self._gpd_r.kwds["scale"])
+	
+	@property
+	def shape_l(self):
+		return float(self._gpd_l.kwds["c"])
+	
+	@property
+	def shape_r(self):
+		return float(self._gpd_r.kwds["c"])
+	
+	##}}}
+	
+##}}}
 
