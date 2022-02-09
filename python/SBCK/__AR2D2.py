@@ -25,6 +25,7 @@ import numpy as np
 
 from .__CDFt import CDFt
 from .tools.__shuffle import MVQuantilesShuffle
+from .tools.__shuffle import MVRanksShuffle
 
 
 ###########
@@ -49,7 +50,7 @@ class AR2D2:
 	
 	"""
 	
-	def __init__( self , col_cond = [1] , lag_search = 1 , lag_keep = 1 , bc_method = CDFt , **bckwargs ):##{{{
+	def __init__( self , col_cond = [1] , lag_search = 1 , lag_keep = 1 , bc_method = CDFt , shuffle = "quantile" , **bckwargs ):##{{{
 		"""
 		Initialisation of AR2D2.
 		
@@ -66,7 +67,10 @@ class AR2D2:
 		**bckwargs: ...
 			all others named arguments are passed to bc_method
 		"""
-		self.mvq = MVQuantilesShuffle( col_cond , lag_search , lag_keep )
+		if shuffle == "quantile":
+			self.mvq = MVQuantilesShuffle( col_cond , lag_search , lag_keep )
+		else:
+			self.mvq = MVRanksShuffle( col_cond , lag_search , lag_keep )
 		self.bc_method = bc_method
 		self.bckwargs = bckwargs
 		self._bcm = None

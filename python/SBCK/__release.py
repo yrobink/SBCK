@@ -19,8 +19,8 @@
 
 version_major = 0
 version_minor = 4
-version_patch = 6
-version_extra = ""
+version_patch = 7
+version_extra = "a0"
 version       = "{}.{}.{}{}".format(version_major,version_minor,version_patch,version_extra)
 
 name = "SBCK"

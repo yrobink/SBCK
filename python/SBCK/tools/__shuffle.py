@@ -333,3 +333,119 @@ class MVQuantilesShuffle: ##{{{
 	
 ##}}}
 
+class MVRanksShuffle: ##{{{
+	"""
+	SBCK.tools.MVRanksShuffle
+	=============================
+	Multivariate Schaake shuffle using the ranks.
+	Used to reproduce the dependence structure of a dataset to another dataset
+	"""
+	
+	def __init__( self , col_cond = [1] , lag_search = 1 , lag_keep = 1 ): ##{{{
+		"""
+		Initialization
+		
+		Parameters
+		----------
+		col_cond : list[int]
+			Conditioning columns
+		lag_search: int
+			Number of lags to transform the dependence structure
+		lag_keep: int
+			Number of lags to keep
+		"""
+		self.col_cond   = col_cond
+		self.lag_search = lag_search
+		self.lag_keep   = lag_keep
+	##}}}
+	
+	def fit( self , Y ):##{{{
+		"""
+		Fit the reference structure
+		
+		Parameters
+		----------
+		Y : np.array[n_samples,n_features]
+			The target dataset
+		"""
+		
+		## Parameters
+		n_samplesY = Y.shape[0]
+		self.n_features = Y.shape[1]
+		self.col_ucond  = [ i for i in range(self.n_features) if i not in self.col_cond ]
+		
+		## Index to build block search matrix
+		tiY = (n_samplesY - 1 - scl.toeplitz(range(n_samplesY)))[::-1,:][:self.lag_search,:(n_samplesY-self.lag_search+1)]
+		
+		## Find quantiles (i.e. ranks)
+		self.qY = sc.rankdata( Y , axis = 0 , method = "ordinal" )
+		
+		## Build conditionning block search
+		qYc = self.qY[:,self.col_cond]
+		self.bsYc = np.array( [ qYc[tiY[:,i],:].ravel() for i in range(n_samplesY-self.lag_search+1) ] )
+	##}}}
+	
+	def transform( self , X ): ##{{{
+		"""
+		Apply the quantiles structure to X
+		
+		Parameters
+		----------
+		X : np.array[n_samples,n_features]
+			The dataset to reorder
+		
+		Returns
+		-------
+		Z : np.array[n_samples,n_features]
+			Reordered dataset
+		"""
+		
+		## Parameters
+		n_samplesX = X.shape[0]
+		
+		## Build non-parametric marginal distribution of X
+		
+		## Index to build block search matrix
+		tiX  = (n_samplesX - 1 - scl.toeplitz(range(n_samplesX)))[::-1,:][:self.lag_search,:(n_samplesX-self.lag_search+1)]
+		
+		## Find quantiles (i.e. ranks)
+		qX = sc.rankdata( X , axis = 0 , method = "ordinal" )
+		
+		## Shrink
+		qY = self.qY
+		if qY.shape[0] < qX.shape[0]:
+			qX = np.round( qX * qY.shape[0] / qX.shape[0] , 0 ).astype(int)
+		elif qX.shape[0] < qY.shape[0]:
+			qY = np.round( qY * qX.shape[0] / qY.shape[0] , 0 ).astype(int)
+		
+		## Build conditionning block search
+		## NOTE: in bsXc, the tiX[:,-1] column is added, otherwise the last values
+		## are missing
+		qXc = qX[:,self.col_cond]
+		bsXc = np.array( [ qXc[tiX[:,i],:].ravel() for i in range(0,n_samplesX-self.lag_search+1,self.lag_keep) ] + [qXc[tiX[:,-1],:].ravel()] )
+		
+		## Now pairwise dist between cond. X / Y block search
+		bsdistc = ssd.cdist( bsXc , self.bsYc )
+		idx_bsc = np.argmin( bsdistc , axis = 1 )
+		
+		## Find associated quantiles in unconditioning Y
+		## NOTE: Here we split into lag_keep values, and some last missing values
+		## lag_search - n_last is the numbers of last missing values.
+		n_last = self.lag_search - (n_samplesX - (bsXc.shape[0] - 1) * self.lag_keep)
+		qZuc = np.vstack( [ qY[:,self.col_ucond][i:(i+self.lag_keep),:] for i in idx_bsc[:-1] ] + [qY[:,self.col_ucond][(idx_bsc[-1]+n_last):(idx_bsc[-1]+self.lag_search),:]] )
+		
+		## Now build qZ
+		qZ_unordered = np.hstack( (qXc,qZuc) )
+		qZ = np.zeros_like( qZ_unordered )
+		qZ[:,self.col_cond + self.col_ucond] = qZ_unordered
+		
+		## And finaly inverse quantiles
+		Xs = np.sort( X , axis = 0 )
+		Z  = np.array( [ Xs[qZ[:,i]-1,i] for i in range(Xs.shape[1]) ] ).T.copy()
+		
+		return Z
+	##}}}
+	
+##}}}
+
+

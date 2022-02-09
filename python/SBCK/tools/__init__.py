@@ -27,6 +27,7 @@ from .__shuffle               import schaake_shuffle
 from .__shuffle               import SchaakeShuffle
 from .__shuffle               import SchaakeShuffleRef
 from .__shuffle               import MVQuantilesShuffle
+from .__shuffle               import MVRanksShuffle
 from .__SlopeStoppingCriteria import SlopeStoppingCriteria
 from .__rv_extend             import rv_histogram
 from .__rv_extend             import rv_ratio_histogram
