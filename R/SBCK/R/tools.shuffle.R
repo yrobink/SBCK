@@ -524,13 +524,13 @@ MVQuantilesShuffle = R6::R6Class( "MVQuantilesShuffle" ,
 		rvY = mrv_histogram$new()$fit(Y)
 		
 		## Index to build block search matrix
-		tiY = (n_samplesY + 1 - toeplitz(1:n_samplesY)[n_samplesY:1,])[1:self$lag_search,1:(n_samplesY-self$lag_search+1)]
+		tiY = (n_samplesY + 1 - toeplitz(1:n_samplesY)[n_samplesY:1,])[1:self$lag_search,1:(n_samplesY-self$lag_search+1),drop=FALSE]
 		
 		## Find quantiles (i.e. ranks)
 		self$qY  = rvY$cdf(Y)
 		
 		## Build conditionning block search
-		qYc = self$qY[,self$col_cond]
+		qYc = self$qY[,self$col_cond,drop=FALSE]
 		self$bsYc = base::c()
 		for( i in 1:(n_samplesY-self$lag_search+1) )
 		{
@@ -553,7 +553,7 @@ MVQuantilesShuffle = R6::R6Class( "MVQuantilesShuffle" ,
 		rvX = mrv_histogram$new()$fit(X)
 		
 		## Index to build block search matrix
-		tiX = (n_samplesX + 1 - toeplitz(1:n_samplesX)[n_samplesX:1,])[1:self$lag_search,1:(n_samplesX-self$lag_search+1)]
+		tiX = (n_samplesX + 1 - toeplitz(1:n_samplesX)[n_samplesX:1,])[1:self$lag_search,1:(n_samplesX-self$lag_search+1),drop=FALSE]
 		
 		## Find quantiles (i.e. ranks)
 		qX  = rvX$cdf(X)
@@ -561,7 +561,7 @@ MVQuantilesShuffle = R6::R6Class( "MVQuantilesShuffle" ,
 		## Build conditionning block search
 		## NOTE: in bsXc, the tiX[:,-1] column is added, otherwise the last values
 		## are missing
-		qXc = qX[,self$col_cond]
+		qXc = qX[,self$col_cond,drop=FALSE]
 		bsXc = base::c()
 		for( i in base::seq( 1 , n_samplesX-self$lag_search+1 , self$lag_keep ) )
 		{
@@ -580,10 +580,11 @@ MVQuantilesShuffle = R6::R6Class( "MVQuantilesShuffle" ,
 		qZuc = base::c()
 		for( i in idx_bsc[1:(length(idx_bsc)-1)] )
 		{
-			qZuc = rbind( qZuc , self$qY[,self$col_ucond][i:(i+self$lag_keep-1),] )
+			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][i:(i+self$lag_keep-1),,drop=FALSE] )
 		}
 		idxl = idx_bsc[length(idx_bsc)]
-		qZuc = rbind( qZuc , self$qY[,self$col_ucond][(idxl+n_last):(idxl+self$lag_search),] )
+		if( n_last < self$lag_search )
+			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][(idxl+n_last):(idxl+self$lag_search),,drop=FALSE] )
 		
 		## Now build qZ
 		qZ_unordered = cbind( qXc , qZuc )
@@ -592,6 +593,191 @@ MVQuantilesShuffle = R6::R6Class( "MVQuantilesShuffle" ,
 		
 		## And finaly inverse quantiles
 		Z = rvX$icdf(qZ)
+		
+		return(Z)
+	}
+	##}}}
+	
+	)
+	
+)
+##}}}
+
+## MVRanksShuffle ##{{{
+
+#' MVRanksShuffle
+#'
+#' @description
+#' Multivariate Schaake shuffle using the ranks.
+#'
+#' @details
+#' Used to reproduce the dependence structure of a dataset to another dataset
+#'
+#' @references Vrac, M. et S. Thao (2020). “R2 D2 v2.0 : accounting for temporal
+#'             dependences in multivariate bias correction via analogue rank
+#'             resampling”. In : Geosci. Model Dev. 13.11, p. 5367-5387.
+#'             doi :10.5194/gmd-13-5367-2020.
+#'
+#' @importFrom ROOPSD mrv_histogram
+#'
+#' @examples
+#' ## Generate sample
+#' X = matrix( stats::rnorm( n = 100 ) , ncol = 4 )
+#' Y = matrix( stats::rnorm( n = 100 ) , ncol = 4 )
+#'
+#' ## Fit dependence structure
+#' ## Assume that the link beween column 2 and 4 is correct, and change also
+#' ## the auto-correlation structure until lag 3 = lag_keep - 1
+#' mvr = MVRanksShuffle$new( base::c(2,4) , lag_search = 6 , lag_keep = 4 )
+#' mvr$fit(Y)
+#' Z = mvr$transform(X)
+#'
+#' @export
+MVRanksShuffle = R6::R6Class( "MVRanksShuffle" ,
+	
+	public = list(
+	
+	###############
+	## Arguments ##
+	###############
+	
+	#' @field col_cond [vector] Conditionning columns
+	col_cond   = NULL,
+	#' @field col_ucond [vector] Un-conditionning columns
+	col_ucond  = NULL,
+	#' @field lag_search [integer] Number of lags to transform the dependence structure
+	lag_search = NULL,
+	#' @field lag_keep [integer] Number of lags to keep
+	lag_keep   = NULL,
+	
+	#' @field n_features [integer] Number of features (dimensions), internal
+	n_features = NULL,
+	#' @field qY [matrix] Ranks structure fitted, internal
+	qY         = NULL,
+	#' @field bsYc [matrix] Block search fitted, internal
+	bsYc       = NULL,
+	
+	#################
+	## Constructor ##
+	#################
+	
+	## initialize ##{{{
+	#' @description
+    #' Create a new MVRanksShuffle object.
+    #' @param col_cond Conditionning colum
+	#' @param lag_search  Number of lags to transform the dependence structure
+	#' @param lag_keep Number of lags to keep
+    #' @return A new `MVRanksShuffle` object.
+	initialize = function( col_cond = base::c(1) , lag_search = 1 , lag_keep = 1 ) 
+	{
+		self$col_cond   = col_cond  
+		self$lag_search = lag_search
+		self$lag_keep   = lag_keep  
+	},
+	##}}}
+	
+	## fit ##{{{
+	#' @description
+    #' Fit method
+    #' @param Y [vector] Dataset to infer the dependance structure
+    #' @return NULL
+	fit = function(Y)
+	{
+		## Parameters
+		self$n_features = ncol(Y)
+		n_samplesY = nrow(Y)
+		self$col_ucond = base::c()
+		for( i in 1:self$n_features )
+		{
+			if( !(i %in% self$col_cond ) )
+				self$col_ucond = base::c( self$col_ucond , i )
+		}
+		
+		## Index to build block search matrix
+		tiY = (n_samplesY + 1 - toeplitz(1:n_samplesY)[n_samplesY:1,])[1:self$lag_search,1:(n_samplesY-self$lag_search+1),drop=FALSE]
+		
+		## Find quantiles (i.e. ranks)
+		self$qY  = base::apply( Y , 2 , base::rank , ties.method = "first" )
+		
+		## Build conditionning block search
+		qYc = self$qY[,self$col_cond,drop=FALSE]
+		self$bsYc = base::c()
+		for( i in 1:(n_samplesY-self$lag_search+1) )
+		{
+			self$bsYc = rbind( self$bsYc , as.vector(qYc[tiY[,i],]) )
+		}
+	},
+	##}}}
+	
+	## transform ##{{{
+	#' @description
+    #' Transform method
+    #' @param X [vector] Dataset to match the dependance structure with the Y fitted
+    #' @return Z The X with the quantiles structure of Y
+	transform = function(X)
+	{
+		## Parameters
+		n_samplesX = nrow(X)
+		n_dim      = ncol(X)
+		
+		## Index to build block search matrix
+		tiX = (n_samplesX + 1 - toeplitz(1:n_samplesX)[n_samplesX:1,])[1:self$lag_search,1:(n_samplesX-self$lag_search+1),drop=FALSE]
+		
+		## Find quantiles (i.e. ranks)
+		qX  = base::apply( X , 2 , base::rank , ties.method = "first" )
+		
+		## Shrink
+		qY = self$qY
+		n_samplesY = nrow(qY)
+		if( n_samplesY < n_samplesX )
+		{
+			qX = round( qX * n_samplesY / n_samplesX )
+		}
+		if( n_samplesY > n_samplesX )
+		{
+			qY = round( qY * n_samplesX / n_samplesY )
+		}
+		
+		## Build conditionning block search
+		## NOTE: in bsXc, the tiX[:,-1] column is added, otherwise the last values
+		## are missing
+		qXc = qX[,self$col_cond,drop=FALSE]
+		bsXc = base::c()
+		for( i in base::seq( 1 , n_samplesX-self$lag_search+1 , self$lag_keep ) )
+		{
+			bsXc = rbind( bsXc , as.vector(qXc[tiX[,i],]) )
+		}
+		bsXc = rbind( bsXc , as.vector(qXc[tiX[,ncol(tiX)],]) )
+		
+		## Now pairwise dist between cond. X / Y block search
+		bsdistc = SBCK::pairwise_distances( bsXc , self$bsYc )
+		idx_bsc = apply( bsdistc , 1 , which.min )
+		
+		## Find associated quantiles in unconditioning Y
+		## NOTE: Here we split into lag_keep values, and some last missing values
+		## lag_search - n_last is the numbers of last missing values.
+		n_last = self$lag_search - (n_samplesX - (nrow(bsXc)-1) * self$lag_keep)
+		qZuc = base::c()
+		for( i in idx_bsc[1:(length(idx_bsc)-1)] )
+		{
+			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][i:(i+self$lag_keep-1),,drop=FALSE] )
+		}
+		idxl = idx_bsc[length(idx_bsc)]
+		if( n_last < self$lag_search )
+			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][(idxl+n_last):(idxl+self$lag_search-1),,drop=FALSE] )
+		
+		## Now build qZ
+		qZ_unordered = cbind( qXc , qZuc )
+		qZ = matrix( 0 , nrow = nrow(qZ_unordered) , ncol = ncol(qZ_unordered) )
+		qZ[,base::c(self$col_cond,self$col_ucond)] = qZ_unordered
+		
+		## And finaly inverse ranks
+		Xs = base::apply( X , 2 , sort )
+		Z = NULL
+		for( i in 1:n_dim )
+		{
+			Z = cbind( Z , Xs[qZ[,i],i] )
+		}
 		
 		return(Z)
 	}
