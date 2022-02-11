@@ -387,7 +387,7 @@ class MVRanksShuffle: ##{{{
 	
 	def transform( self , X ): ##{{{
 		"""
-		Apply the quantiles structure to X
+		Apply the ranks structure to X
 		
 		Parameters
 		----------
@@ -439,7 +439,7 @@ class MVRanksShuffle: ##{{{
 		qZ = np.zeros_like( qZ_unordered )
 		qZ[:,self.col_cond + self.col_ucond] = qZ_unordered
 		
-		## And finaly inverse quantiles
+		## And finaly inverse ranks
 		Xs = np.sort( X , axis = 0 )
 		Z  = np.array( [ Xs[qZ[:,i]-1,i] for i in range(Xs.shape[1]) ] ).T.copy()
 		
