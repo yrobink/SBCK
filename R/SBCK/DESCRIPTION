@@ -1,7 +1,7 @@
 Package: SBCK
 Type: Package
 Title: Statistical Bias Correction Kit
-Version: 0.4.7
+Version: 0.4.8
 Date: 2022-02-11
 Authors@R: c( person("Yoann"  , "Robin", email = "yoann.robin.k@gmail.com"  , role = c("aut", "cre")),
 			  person("Mathieu", "Vrac" , email = "mathieu.vrac@lsce.ipsl.fr", role = c("cph")) )
@@ -19,7 +19,7 @@ Imports:
 	Rcpp,
 	methods,
 	R6,
-	ROOPSD (>= 0.3.1)
+	ROOPSD (>= 0.3.3)
 LinkingTo: Rcpp, RcppEigen
 RcppModules: SBCK_cpp
 RoxygenNote: 7.1.2
