@@ -53,7 +53,16 @@ wasserstein = function( X , Y , p = 2 , ot = SBCK::OTNetworkSimplex$new() )
 	mu = SBCK::data_to_hist(X,Y)
 	ot$p = p
 	ot$fit( mu$muX , mu$muY )
+	
 	cost = base::sum(ot$plan * ot$C)^(1. / ot$p)
+	if( !ot$success )
+	{
+		cost = NaN
+	}
+	if( !( abs( base::sum(ot$plan) - 1 ) < 1e-6 ) )
+	{
+		cost = NaN
+	}
 	
 	invisible(cost)
 }
