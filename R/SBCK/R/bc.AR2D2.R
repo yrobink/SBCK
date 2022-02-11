@@ -76,11 +76,15 @@ AR2D2 = R6::R6Class( "AR2D2" ,
 	#' @param lag_search  Number of lags to transform the dependence structure
 	#' @param lag_keep Number of lags to keep
 	#' @param bc_method Bias correction method
+	#' @param shuffle Shuffle method used, can be quantile or rank
 	#' @param ... Others named arguments passed to bc_method$new
     #' @return A new `AR2D2` object.
-	initialize = function( col_cond = base::c(1) , lag_search = 1 , lag_keep = 1 , bc_method = SBCK::CDFt , ... ) 
+	initialize = function( col_cond = base::c(1) , lag_search = 1 , lag_keep = 1 , bc_method = SBCK::CDFt , shuffle = "quantile" , ... ) 
 	{
-		self$mvq = MVQuantilesShuffle$new( col_cond , lag_search , lag_keep )
+		if( shuffle == "quantile" )
+			self$mvq = MVQuantilesShuffle$new( col_cond , lag_search , lag_keep )
+		else
+			self$mvq = MVRanksShuffle$new( col_cond , lag_search , lag_keep )
 		self$bc_method = bc_method
 		self$bckwargs = list(...)
 	},
