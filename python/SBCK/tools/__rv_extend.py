@@ -111,7 +111,8 @@ class rv_histogram:##{{{
 		Xr = sc.rankdata(Xs,method="max")
 		p  = np.unique(Xr) / X.size
 		q  = Xs[np.unique(Xr)-1]
-		p[0] = 0
+		p  = np.hstack( (0,p) )
+		q  = np.hstack( (X.min()-np.finfo(float).resolution,q) )
 #		p = np.linspace( 0 , 1 , X.size )
 #		q = np.sort(X.squeeze())
 		
