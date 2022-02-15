@@ -64,6 +64,8 @@ AR2D2 = R6::R6Class( "AR2D2" ,
 	bckwargs  = NULL,
 	#' @field bcm_ [SBCK::] Instancied bias correction method
 	bcm_      = NULL,
+	#' @field reverse [bool] If we apply bc_method first and then shuffle, or reverse
+	reverse   = NULL,
 	
 	#################
 	## Constructor ##
@@ -77,9 +79,10 @@ AR2D2 = R6::R6Class( "AR2D2" ,
 	#' @param lag_keep Number of lags to keep
 	#' @param bc_method Bias correction method
 	#' @param shuffle Shuffle method used, can be quantile or rank
+	#' @param reverse If we apply bc_method first and then shuffle, or reverse
 	#' @param ... Others named arguments passed to bc_method$new
     #' @return A new `AR2D2` object.
-	initialize = function( col_cond = base::c(1) , lag_search = 1 , lag_keep = 1 , bc_method = SBCK::CDFt , shuffle = "quantile" , ... ) 
+	initialize = function( col_cond = base::c(1) , lag_search = 1 , lag_keep = 1 , bc_method = SBCK::CDFt , shuffle = "quantile" , reverse = FALSE , ... ) 
 	{
 		if( shuffle == "quantile" )
 			self$mvq = MVQuantilesShuffle$new( col_cond , lag_search , lag_keep )
@@ -87,6 +90,7 @@ AR2D2 = R6::R6Class( "AR2D2" ,
 			self$mvq = MVRanksShuffle$new( col_cond , lag_search , lag_keep )
 		self$bc_method = bc_method
 		self$bckwargs = list(...)
+		self$reverse = reverse
 	},
 	##}}}
 	
@@ -129,17 +133,43 @@ AR2D2 = R6::R6Class( "AR2D2" ,
 		}
 		if( is.null(X0) )
 		{
-			Z1b = self$bcm_$predict(X1)
-			return( self$mvq$transform(Z1b) )
+			if( self$reverse )
+			{
+				Z1 = self$mvq$transform(X1)
+				return( self$bcm_$predict(Z1) )
+			}
+			else
+			{
+				Z1b = self$bcm_$predict(X1)
+				return( self$mvq$transform(Z1b) )
+			}
 		}
 		if( is.null(X1) )
 		{
-			Z0b = self$bcm_$predict(X0)
-			return( self$mvq$transform(Z0b) )
+			if( self$reverse )
+			{
+				Z0 = self$mvq$transform(X0)
+				return( self$bcm_$predict(Z0) )
+			}
+			else
+			{
+				Z0b = self$bcm_$predict(X0)
+				return( self$mvq$transform(Z0b) )
+			}
 		}
-		Zb = self$bcm_$predict(X1,X0)
-		Z  = list( Z1 = self$mvq$transform(Zb$Z1) , Z0 = self$mvq$transform(Zb$Z0) )
-		return(Z)
+		
+		if( self$reverse )
+		{
+			Z0 = self$mvq$transform(X0)
+			Z1 = self$mvq$transform(X1)
+			return( self$bcm_$predict(Z1,Z0) )
+		}
+		else
+		{
+			Zb = self$bcm_$predict(X1,X0)
+			Z  = list( Z1 = self$mvq$transform(Zb$Z1) , Z0 = self$mvq$transform(Zb$Z0) )
+			return(Z)
+		}
 	}
 	##}}}
 	

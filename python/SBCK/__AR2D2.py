@@ -50,7 +50,7 @@ class AR2D2:
 	
 	"""
 	
-	def __init__( self , col_cond = [1] , lag_search = 1 , lag_keep = 1 , bc_method = CDFt , shuffle = "quantile" , **bckwargs ):##{{{
+	def __init__( self , col_cond = [1] , lag_search = 1 , lag_keep = 1 , bc_method = CDFt , shuffle = "quantile" , reverse = False , **bckwargs ):##{{{
 		"""
 		Initialisation of AR2D2.
 		
@@ -64,6 +64,11 @@ class AR2D2:
 			Number of lags to keep
 		bc_method: SBCK.<bc_method>
 			Bias correction method
+		shuffle: str
+			Shuffle method used, can be "quantile" or "rank".
+		reverse: bool
+			If False, first apply bc_method, and after the shuffle. If True, 
+			reverse this operation.
 		**bckwargs: ...
 			all others named arguments are passed to bc_method
 		"""
@@ -72,8 +77,9 @@ class AR2D2:
 		else:
 			self.mvq = MVRanksShuffle( col_cond , lag_search , lag_keep )
 		self.bc_method = bc_method
-		self.bckwargs = bckwargs
-		self._bcm = None
+		self.bckwargs  = bckwargs
+		self._bcm      = None
+		self._reverse  = reverse
 	##}}}
 	
 	def fit( self , Y0 , X0 , X1 = None ):##{{{
@@ -120,12 +126,26 @@ class AR2D2:
 		if X0 is None and X1 is None:
 			return
 		if X0 is None:
-			Z1b = self._bcm.predict(X1)
-			return self.mvq.transform(Z1b)
+			if self._reverse:
+				Z1 = self.mvq.transform(X1)
+				return self._bcm.predict(Z1)
+			else:
+				Z1b = self._bcm.predict(X1)
+				return self.mvq.transform(Z1b)
 		if X1 is None:
-			Z0b = self._bcm.predict(X0)
-			return self.mvq.transform(Z0b)
-		Z1b,Z0b = self._bcm.predict(X1,X0)
-		return self.mvq.transform(Z1b),self.mvq.transform(Z0b)
+			if self._reverse:
+				Z0 = self.mvq.transform(X0)
+				return self._bcm.predict(Z0)
+			else:
+				Z0b = self._bcm.predict(X0)
+				return self.mvq.transform(Z0b)
+		
+		if self._reverse:
+			Z0 = self.mvq.transform(X0)
+			Z1 = self.mvq.transform(X1)
+			return self._bcm.predict(Z1,Z0)
+		else:
+			Z1b,Z0b = self._bcm.predict(X1,X0)
+			return self.mvq.transform(Z1b),self.mvq.transform(Z0b)
 	##}}}
 
