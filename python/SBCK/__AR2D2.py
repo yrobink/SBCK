@@ -50,7 +50,7 @@ class AR2D2:
 	
 	"""
 	
-	def __init__( self , col_cond = [1] , lag_search = 1 , lag_keep = 1 , bc_method = CDFt , shuffle = "quantile" , reverse = False , **bckwargs ):##{{{
+	def __init__( self , col_cond = [0] , lag_search = 1 , lag_keep = 1 , bc_method = CDFt , shuffle = "quantile" , reverse = False , **bckwargs ):##{{{
 		"""
 		Initialisation of AR2D2.
 		
