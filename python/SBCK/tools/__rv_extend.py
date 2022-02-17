@@ -112,7 +112,11 @@ class rv_histogram:##{{{
 		p  = np.unique(Xr) / X.size
 		q  = Xs[np.unique(Xr)-1]
 		p  = np.hstack( (0,p) )
-		q  = np.hstack( (X.min()-np.finfo(float).resolution,q) )
+#		q  = np.hstack( (X.min()-np.finfo(float).resolution,q) )
+		q  = np.hstack( (X.min(),q) )
+		if q[0] == q[1]:
+			eps  = np.sqrt(np.finfo(float).resolution)
+			q[1] = (1-eps) * q[0] + eps * q[2]
 #		p = np.linspace( 0 , 1 , X.size )
 #		q = np.sort(X.squeeze())
 		
