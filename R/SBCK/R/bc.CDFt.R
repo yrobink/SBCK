@@ -107,12 +107,24 @@ CDFt = R6::R6Class( "CDFt" ,
 	## initialize ##{{{
 	#' @description
     #' Create a new CDFt object.
-	#' @param ... Optional arguments are distX0, distX1 (models in calibration
-	#'            and projection period), distY0, distY1 (observations
-	#'            in calibration and projection period), and kwargsX0,
-	#'            ...,kwargsY1 the arguments of each respective
-	#'            distribution. The type of dist* are ROOPSD distribution,
-	#'            whereas kwargs* are list.
+	#' @param ... Optional arguments are:
+	#'            - distX0, distX1, models in calibration and projection period, see ROOPSD
+	#'            - distY0, distY1, observations in calibration and projection period, see ROOPSD
+	#'            - kwargsX0, kwargsX1, list of arguments for each respective distribution
+	#'            - kwargsY0, kwargsY1, list of arguments for each respective distribution
+	#'            - scale_left_tail [float]  Scale applied on the left support
+	#'              (min to median) between calibration and projection period. If
+	#'              NULL (default), it is determined during the fit. If == 1,
+	#'              equivalent to the original algorithm of CDFt.
+	#'            - scale_right_tail [float]  Scale applied on the right support
+	#'              (median to max) between calibration and projection period. If
+	#'              NULL (default), it is determined during the fit. If == 1,
+	#'              equivalent to the original algorithm of CDFt.
+	#'            - normalize_cdf [bool or vector of bool] If a normalization
+	#'              is applied to the data to maximize the overlap of the
+	#'              support. Can be a bool (True or False, applied for all
+	#'              colums), or a list of bool of size 'n_features' to
+	#'              distinguished each columns.
 	#' @return A new `CDFt` object.
 	initialize = function(...) 
 	{
@@ -126,6 +138,9 @@ CDFt = R6::R6Class( "CDFt" ,
 		private$dsupp   = if( !is.null(kwargs[["dsupp"]]) ) kwargs[["dsupp"]] else 1000
 		private$scale_left_tail  = if( !is.null(kwargs[["scale_left_tail"]]) )  kwargs[["scale_left_tail"]]  else NA
 		private$scale_right_tail = if( !is.null(kwargs[["scale_right_tail"]]) ) kwargs[["scale_right_tail"]] else NA
+		private$normalize_cdf    = if( !is.null(kwargs[["scale_right_tail"]]) ) kwargs[["scale_right_tail"]] else TRUE
+		if( !( class(private$normalize_cdf) %in% list("logical","numeric") ) )
+			private$normalize_cdf = FALSE
 	},
 	##}}}
 	
@@ -162,6 +177,10 @@ CDFt = R6::R6Class( "CDFt" ,
 		self$distX0$set_features(self$n_features)
 		self$distX1$set_features(self$n_features)
 		
+		## Set normalizations
+		##===================
+		if( class(private$normalize_cdf) == "logical" )
+			private$normalize_cdf = numeric(self$n_features) + private$normalize_cdf
 		
 		## Start fit itself
 		##=================
@@ -261,6 +280,7 @@ CDFt = R6::R6Class( "CDFt" ,
 	dsupp  = 1000,
 	scale_left_tail  = NA,
 	scale_right_tail = NA,
+	normalize_cdf    = TRUE,
 	
 	#############
 	## Methods ##
@@ -276,15 +296,17 @@ CDFt = R6::R6Class( "CDFt" ,
 		
 		
 		## Normalization
-		mY0 = base::mean(Y0)
-		mX0 = base::mean(X0)
-		mX1 = base::mean(X1)
-		sY0 = stats::sd(Y0)
-		sX0 = stats::sd(X0)
-		
-		X0s = (X0 - mX0) * sY0 / sX0 + mY0
-		X1s = (X1 - mX1) * sY0 / sX0 + mX1 + mY0 - mX0
-		
+		if( private$normalize_cdf[idx] )
+		{
+			mY0 = base::mean(Y0)
+			mX0 = base::mean(X0)
+			mX1 = base::mean(X1)
+			sY0 = stats::sd(Y0)
+			sX0 = stats::sd(X0)
+			
+			X0s = (X0 - mX0) * sY0 / sX0 + mY0
+			X1s = (X1 - mX1) * sY0 / sX0 + mX1 + mY0 - mX0
+		}
 		
 		## CDF
 		rvY0  = self$distY0$law[[idx]]
