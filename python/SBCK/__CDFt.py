@@ -93,9 +93,25 @@ class CDFt:
 		kwargsX1 : dict
 			Arguments passed to distX1
 		n_features: None or integer
-			Numbers of features, optional because it is determined during fit if X0 and Y0 are not None.
+			Numbers of features, optional because it is determined during fit
+			if X0 and Y0 are not None.
 		tol : float
 			Numerical tolerance, default 1e-6
+		scale_left_tail: float, optional
+			Scale applied on the left support (min to median) between
+			calibration and projection period. If None (default), it is
+			determined during the fit. If == 1, equivalent to the original
+			algorithm of CDFt.
+		scale_right_tail: float, optional
+			Scale applied on the right support (median to max) between
+			calibration and projection period. If None (default), it is
+			determined during the fit. If == 1, equivalent to the original
+			algorithm of CDFt.
+		normalize_cdf: bool or list of bool
+			If a normalization is applied to the data to maximize the overlap
+			of the support. Can be a bool (True or False, applied for all
+			colums), or a list of bool of size 'n_features' to distinguished
+			each columns.
 		
 		"""
 		self.n_features  = kwargs.get("n_features")
@@ -109,6 +125,9 @@ class CDFt:
 		self._distX1 = _Dist( dist = kwargs.get("distX1") , kwargs = kwargs.get("kwargsX1") )
 		self._scale_left_tail  = kwargs.get("scale_left_tail")
 		self._scale_right_tail = kwargs.get("scale_right_tail")
+		self._normalize_cdf    = kwargs.get("normalize_cdf")
+		if ~(type(self._normalize_cdf) in [bool,list]):
+			self._normalize_cdf = True
 	##}}}
 	
 	def fit( self , Y0 , X0 , X1 ):##{{{
@@ -141,6 +160,10 @@ class CDFt:
 			elif Y0 is not None: self.n_features = Y0.shape[1]
 			elif X0 is not None: self.n_features = X0.shape[1]
 			else:                self.n_features = X1.shape[1]
+		
+		## Set normalizations
+		if type(self._normalize_cdf) == bool:
+			self._normalize_cdf = [self._normalize_cdf for _ in range(self.n_features)]
 		
 		## Find laws
 		self._distY0.set_features(self.n_features)
@@ -215,14 +238,15 @@ class CDFt:
 		dsupp = self._dsupp
 		
 		## Normalization
-		mY0 = np.mean(Y0)
-		mX0 = np.mean(X0)
-		mX1 = np.mean(X1)
-		sY0 = np.std(Y0)
-		sX0 = np.std(X0)
-		
-		X0s = (X0 - mX0) * sY0 / sX0 + mY0
-		X1s = (X1 - mX1) * sY0 / sX0 + mX1 + mY0 - mX0
+		if self._normalize_cdf[idx]:
+			mY0 = np.mean(Y0)
+			mX0 = np.mean(X0)
+			mX1 = np.mean(X1)
+			sY0 = np.std(Y0)
+			sX0 = np.std(X0)
+			
+			X0s = (X0 - mX0) * sY0 / sX0 + mY0
+			X1s = (X1 - mX1) * sY0 / sX0 + mX1 + mY0 - mX0
 		
 		## CDF
 		rvY0  = self._distY0.law[idx]
@@ -322,7 +346,7 @@ class CDFt:
 			cdfY1 = cdfY1[:idxr]
 		except:
 			pass
-	
+		
 		## Inverse of the CDF
 		icdfY1 = sci.interp1d( cdfY1 , x , fill_value = (x[0],x[-1]) , bounds_error = False )
 		
