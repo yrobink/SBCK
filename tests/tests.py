@@ -514,7 +514,7 @@ def test_TSMBC( plot = True ):##{{{
 	##================
 	nlags = 20
 	
-	tsbc = bc.TSBC( lag = nlags )
+	tsbc = bc.TSMBC( lag = nlags )
 	tsbc.fit( Y , X )
 	
 	lZ = []
@@ -556,6 +556,57 @@ def test_TSMBC( plot = True ):##{{{
 		
 		ax = fig.add_subplot( nrow , ncol , 2 )
 		AR.plot_pacf( [X,Y] + lZ , ["red","blue"] + greens , ax = ax , nlags = 7 )
+		
+		fig.set_tight_layout(True)
+		plt.show()
+##}}}
+
+def test_AR2D2( plot = True ):##{{{
+	size = 2000
+	
+	## Generate AR3 processes
+	##=======================
+	ar3X = AR( loc = 0.2 , phi = [0.6,-0.2,0.1] , sigma = 1 )
+	X  = np.array( [ ar3X() for _ in range(size) ] )
+	
+	ar3Y = AR( loc = 0 , phi = [-0.3,0.4,-0.2] , sigma = 0.7 )
+	Y  = np.array( [ ar3Y() for _ in range(size) ] ) + 5
+	
+	
+	## Bias correction
+	##================
+	r2d2 = bc.AR2D2( lag_search = 20 , lag_keep = 10 , bc_method = bc.QM )
+	r2d2.fit( Y , X )
+	Z = r2d2.predict(X)
+	
+	if plot:
+		## Gaussian kernel
+		##================
+		kde_X = sc.gaussian_kde(X.ravel())
+		kde_Y = sc.gaussian_kde(Y.ravel())
+		kde_Z = sc.gaussian_kde(Z.ravel())
+		
+		## Plot
+		##=====
+		
+		xmin = min( [T.min() for T in [X,Y,Z]] )
+		xmax = max( [T.max() for T in [X,Y,Z]] )
+		delta = (xmax - xmin) / 10
+		xmin -= delta
+		xmax += delta
+		bins = np.linspace( xmin , xmax , 200 )
+		
+		nrow,ncol,fs = 1,2,7
+		fig = plt.figure( figsize = (fs*ncol,fs*nrow) )
+		
+		ax = fig.add_subplot( nrow , ncol , 1 )
+		ax.plot( bins , kde_X(bins) , color = "red" , label = r"$X$" )
+		ax.plot( bins , kde_Y(bins) , color = "blue" , marker = "" , label = r"$Y$" )
+		ax.plot( bins , kde_Z(bins) , color = "green" , marker = "" , label = r"$Z$" )
+		ax.legend( loc = "upper left" )
+		
+		ax = fig.add_subplot( nrow , ncol , 2 )
+		AR.plot_pacf( [X,Y] + [Z] , ["red","blue","green"] , ax = ax , nlags = 7 )
 		
 		fig.set_tight_layout(True)
 		plt.show()
@@ -619,7 +670,7 @@ if __name__ == "__main__":
 	
 	print(bc.__version__)
 	np.random.seed(42)
-	
+	test_AR2D2()
 	## Run tests
 	##==========
 	##{{{
