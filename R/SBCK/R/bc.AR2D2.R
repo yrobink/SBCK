@@ -108,11 +108,28 @@ AR2D2 = R6::R6Class( "AR2D2" ,
 		self$bcm_ = do.call( self$bc_method$new , self$bckwargs )
 		if( is.null(X1) )
 		{
-			self$bcm_$fit( Y0 , X0 )
+			if( self$reverse )
+			{
+				Z0 = self$mvq$transform(X0)
+				self$bcm_$fit( Y0 , Z0 )
+			}
+			else
+			{
+				self$bcm_$fit( Y0 , X0 )
+			}
 		}
 		else
 		{
-			self$bcm_$fit( Y0 , X0 , X1 )
+			if( self$reverse )
+			{
+				Z0 = self$mvq$transform(X0)
+				Z1 = self$mvq$transform(X1)
+				self$bcm_$fit( Y0 , Z0 , Z1 )
+			}
+			else
+			{
+				self$bcm_$fit( Y0 , X0 , X1 )
+			}
 		}
 	},
 	##}}}
