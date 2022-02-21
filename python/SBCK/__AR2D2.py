@@ -99,9 +99,18 @@ class AR2D2:
 		self.mvq.fit(Y0)
 		self._bcm = self.bc_method(**self.bckwargs)
 		if X1 is None:
-			self._bcm.fit( Y0 , X0 )
+			if self._reverse:
+				Z0 = self.mvq.transform(X0)
+				self._bcm.fit( Y0 , Z0 )
+			else:
+				self._bcm.fit( Y0 , X0 )
 		else:
-			self._bcm.fit( Y0 , X0 , X1 )
+			if self._reverse:
+				Z0 = self.mvq.transform(X0)
+				Z1 = self.mvq.transform(X1)
+				self._bcm.fit( Y0 , Z0 , Z1 )
+			else:
+				self._bcm.fit( Y0 , X0 , X1 )
 	##}}}
 	
 	def predict( self , X1 = None , X0 = None ):##{{{

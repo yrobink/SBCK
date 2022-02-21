@@ -111,16 +111,15 @@ class rv_histogram:##{{{
 		Xr = sc.rankdata(Xs,method="max")
 		p  = np.unique(Xr) / X.size
 		q  = Xs[np.unique(Xr)-1]
-		p  = np.hstack( (0,p) )
-#		q  = np.hstack( (X.min()-np.finfo(float).resolution,q) )
-		q  = np.hstack( (X.min(),q) )
-		if q[0] == q[1]:
-			eps  = np.sqrt(np.finfo(float).resolution)
-			q[1] = (1-eps) * q[0] + eps * q[2]
-#		p = np.linspace( 0 , 1 , X.size )
-#		q = np.sort(X.squeeze())
 		
-		icdf = sci.interp1d( p , q , bounds_error = False , fill_value = np.nan )
+		p[0] = 0
+#		p  = np.hstack( (0,p) )
+#		q  = np.hstack( (X.min(),q) )
+#		if q[0] == q[1]:
+#			eps  = np.sqrt(np.finfo(float).resolution)
+#			q[1] = (1-eps) * q[0] + eps * q[2]
+		
+		icdf = sci.interp1d( p , q , bounds_error = False , fill_value = (q[0],q[-1]) )
 		cdf  = sci.interp1d( q , p , bounds_error = False , fill_value = (0,1) )
 		
 		h,c = np.histogram( X , int(0.1*X.size) , density = True )
