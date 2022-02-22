@@ -286,7 +286,7 @@ CDFt = R6::R6Class( "CDFt" ,
 	## Methods ##
 	#############
 	
-	infer_Y1 = function( Y0 , X0 , X1 , idx )##{{{
+	infer_Y1 = function( Y0 , X0 , X1 , idist )##{{{
 	{
 		dsupp      = private$dsupp
 		tol        = self$tol
@@ -296,7 +296,7 @@ CDFt = R6::R6Class( "CDFt" ,
 		
 		
 		## Normalization
-		if( private$normalize_cdf[idx] )
+		if( private$normalize_cdf[idist] )
 		{
 			mY0 = base::mean(Y0)
 			mX0 = base::mean(X0)
@@ -309,10 +309,10 @@ CDFt = R6::R6Class( "CDFt" ,
 		}
 		
 		## CDF
-		rvY0  = self$distY0$law[[idx]]
-		rvX0s = base::do.call( self$distX0$dist[[idx]]$new , self$distX0$kwargs )
+		rvY0  = self$distY0$law[[idist]]
+		rvX0s = base::do.call( self$distX0$dist[[idist]]$new , self$distX0$kwargs )
 		rvX0s$fit(X0s)
-		rvX1s = base::do.call( self$distX1$dist[[idx]]$new , self$distX1$kwargs )
+		rvX1s = base::do.call( self$distX1$dist[[idist]]$new , self$distX1$kwargs )
 		rvX1s$fit(X1s)
 		
 		## Support
@@ -500,7 +500,10 @@ CDFt = R6::R6Class( "CDFt" ,
 		
 		
 		## Draw Y1
-		hY1    = icdfY1( runif( n = samples_Y1 , min = p_min , max = p_max ) )
+#		hY1  = icdfY1( runif( n = samples_Y1 , min = p_min , max = p_max ) )
+		rvX1 = base::do.call( self$distX1$dist[[idist]]$new , self$distX1$kwargs )
+		rvX1$fit(X1)
+		hY1  = icdfY1( rvX1$cdf(X1) )
 		
 		return(hY1)
 	}

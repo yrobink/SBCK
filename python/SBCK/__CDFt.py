@@ -233,12 +233,12 @@ class CDFt:
 		return Z1
 	##}}}
 	
-	def _infer_Y1( self , Y0 , X0 , X1 , idx ):##{{{
+	def _infer_Y1( self , Y0 , X0 , X1 , idist ):##{{{
 		
 		dsupp = self._dsupp
 		
 		## Normalization
-		if self._normalize_cdf[idx]:
+		if self._normalize_cdf[idist]:
 			mY0 = np.mean(Y0)
 			mX0 = np.mean(X0)
 			mX1 = np.mean(X1)
@@ -249,9 +249,9 @@ class CDFt:
 			X1s = (X1 - mX1) * sY0 / sX0 + mX1 + mY0 - mX0
 		
 		## CDF
-		rvY0  = self._distY0.law[idx]
-		rvX0s = self._distX0.dist[idx]( *self._distX0.dist[idx].fit( X0s.squeeze()) , **self._distX0.kwargs )
-		rvX1s = self._distX1.dist[idx]( *self._distX1.dist[idx].fit( X1s.squeeze()) , **self._distX1.kwargs )
+		rvY0  = self._distY0.law[idist]
+		rvX0s = self._distX0.dist[idist]( *self._distX0.dist[idist].fit( X0s.squeeze()) , **self._distX0.kwargs )
+		rvX1s = self._distX1.dist[idist]( *self._distX1.dist[idist].fit( X1s.squeeze()) , **self._distX1.kwargs )
 		
 		## Support
 		## Here the support is such that the CDF of Y0, X0s and X1s start from 0
@@ -402,7 +402,9 @@ class CDFt:
 			icdfY1 = sci.interp1d( cdfY1 , x , fill_value = (x[0],x[-1]) , bounds_error = False )
 		
 		## Draw hY1
-		hY1 = icdfY1( np.random.uniform( size = self._samples_Y1 , low = p_min , high = p_max ) )
+#		hY1 = icdfY1( np.random.uniform( size = self._samples_Y1 , low = p_min , high = p_max ) )
+		rvX1 = self._distX1.dist[idist]( *self._distX1.dist[idist].fit( X1.squeeze()) , **self._distX1.kwargs )
+		hY1  = icdfY1( rvX1.cdf(X1) )
 		
 		return hY1
 	##}}}
