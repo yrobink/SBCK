@@ -1,5 +1,5 @@
 
-## Copyright(c) 2021 Yoann Robin
+## Copyright(c) 2022 Yoann Robin
 ## 
 ## This file is part of SBCK.
 ## 
@@ -17,14 +17,9 @@
 ## along with SBCK.  If not, see <https://www.gnu.org/licenses/>.
 
 
-version_major = 0
-version_minor = 5
-version_patch = 0
-version_extra = "a0"
-version       = "{}.{}.{}{}".format(version_major,version_minor,version_patch,version_extra)
+from .__PrePostProcessing import PrePostProcessing
+from .__PPPSSR          import PPPSSR
+from .__PPPFunctionLink import PPPFunctionLink
+from .__PPPFunctionLink import PPPSquareLink
+from .__PPPFunctionLink import PPPLogLinLink
 
-name = "SBCK"
-description = "Statistical Bias Correction Kit"
-author = "Yoann Robin"
-author_email = "yoann.robin.k@gmail.com"
-license = "GNU-GPL3"

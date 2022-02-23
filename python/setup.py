@@ -165,6 +165,7 @@ ext_modules = [
 
 list_packages = [
 	"SBCK",
+	"SBCK.ppp",
 	"SBCK.tools",
 	"SBCK.metrics",
 	"SBCK.datasets"
