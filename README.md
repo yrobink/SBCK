@@ -1,5 +1,8 @@
 # SBCK (Statistical Bias Correction Kit)
 
+Use the version-0.4.X branch, the version-0.5.X is in alpha, and don't really
+work.
+
 ## Features
 - python3 and R version
 - c++ independent files for Sparse Histogram
