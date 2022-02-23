@@ -577,19 +577,33 @@ MVQuantilesShuffle = R6::R6Class( "MVQuantilesShuffle" ,
 		## NOTE: Here we split into lag_keep values, and some last missing values
 		## lag_search - n_last is the numbers of last missing values.
 		n_last = self$lag_search - (n_samplesX - (nrow(bsXc) - 1) * self$lag_keep) + 1
-		qZuc = base::c()
+		
+		## ===> Saved
+#		qZuc = base::c()
+#		for( i in idx_bsc[1:(length(idx_bsc)-1)] )
+#		{
+#			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][i:(i+self$lag_keep-1),,drop=FALSE] )
+#		}
+#		idxl = idx_bsc[length(idx_bsc)]
+#		if( n_last < self$lag_search )
+#			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][(idxl+n_last):(idxl+self$lag_search),,drop=FALSE] )
+#		
+#		## Now build qZ
+#		qZ_unordered = cbind( qXc , qZuc )
+#		qZ = matrix( 0 , nrow = nrow(qZ_unordered) , ncol = ncol(qZ_unordered) )
+#		qZ[,base::c(self$col_cond,self$col_ucond)] = qZ_unordered
+		## <===
+		
+		## ===> New
+		qZ = base::c()
 		for( i in idx_bsc[1:(length(idx_bsc)-1)] )
 		{
-			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][i:(i+self$lag_keep-1),,drop=FALSE] )
+			qZ = rbind( qZ , self$qY[i:(i+self$lag_keep-1),,drop=FALSE] )
 		}
 		idxl = idx_bsc[length(idx_bsc)]
 		if( n_last < self$lag_search )
-			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][(idxl+n_last):(idxl+self$lag_search),,drop=FALSE] )
-		
-		## Now build qZ
-		qZ_unordered = cbind( qXc , qZuc )
-		qZ = matrix( 0 , nrow = nrow(qZ_unordered) , ncol = ncol(qZ_unordered) )
-		qZ[,base::c(self$col_cond,self$col_ucond)] = qZ_unordered
+			qZ = rbind( qZ , self$qY[(idxl+n_last):(idxl+self$lag_search),,drop=FALSE] )
+		## <===
 		
 		## And finaly inverse quantiles
 		Z = rvX$icdf(qZ)
@@ -757,19 +771,33 @@ MVRanksShuffle = R6::R6Class( "MVRanksShuffle" ,
 		## NOTE: Here we split into lag_keep values, and some last missing values
 		## lag_search - n_last is the numbers of last missing values.
 		n_last = self$lag_search - (n_samplesX - (nrow(bsXc)-1) * self$lag_keep)
-		qZuc = base::c()
+		
+		##===> Saved
+#		qZuc = base::c()
+#		for( i in idx_bsc[1:(length(idx_bsc)-1)] )
+#		{
+#			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][i:(i+self$lag_keep-1),,drop=FALSE] )
+#		}
+#		idxl = idx_bsc[length(idx_bsc)]
+#		if( n_last < self$lag_search )
+#			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][(idxl+n_last):(idxl+self$lag_search-1),,drop=FALSE] )
+#		
+#		## Now build qZ
+#		qZ_unordered = cbind( qXc , qZuc )
+#		qZ = matrix( 0 , nrow = nrow(qZ_unordered) , ncol = ncol(qZ_unordered) )
+#		qZ[,base::c(self$col_cond,self$col_ucond)] = qZ_unordered
+		##<===
+		
+		##===> New
+		qZ = base::c()
 		for( i in idx_bsc[1:(length(idx_bsc)-1)] )
 		{
-			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][i:(i+self$lag_keep-1),,drop=FALSE] )
+			qZ = rbind( qZ , self$qY[i:(i+self$lag_keep-1),,drop=FALSE] )
 		}
 		idxl = idx_bsc[length(idx_bsc)]
 		if( n_last < self$lag_search )
-			qZuc = rbind( qZuc , self$qY[,self$col_ucond,drop=FALSE][(idxl+n_last):(idxl+self$lag_search-1),,drop=FALSE] )
-		
-		## Now build qZ
-		qZ_unordered = cbind( qXc , qZuc )
-		qZ = matrix( 0 , nrow = nrow(qZ_unordered) , ncol = ncol(qZ_unordered) )
-		qZ[,base::c(self$col_cond,self$col_ucond)] = qZ_unordered
+			qZ = rbind( qZ , self$qY[(idxl+n_last):(idxl+self$lag_search-1),,drop=FALSE] )
+		##<===
 		
 		## And finaly inverse ranks
 		Xs = base::apply( X , 2 , sort )

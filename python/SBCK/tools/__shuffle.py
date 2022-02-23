@@ -318,12 +318,19 @@ class MVQuantilesShuffle: ##{{{
 		## NOTE: Here we split into lag_keep values, and some last missing values
 		## lag_search - n_last is the numbers of last missing values.
 		n_last = self.lag_search - (n_samplesX - (bsXc.shape[0] - 1) * self.lag_keep)
-		qZuc = np.vstack( [ self.qY[:,self.col_ucond][i:(i+self.lag_keep),:] for i in idx_bsc[:-1] ] + [self.qY[:,self.col_ucond][(idx_bsc[-1]+n_last):(idx_bsc[-1]+self.lag_search),:]] )
 		
-		## Now build qZ
-		qZ_unordered = np.hstack( (qXc,qZuc) )
-		qZ = np.zeros_like( qZ_unordered )
-		qZ[:,self.col_cond + self.col_ucond] = qZ_unordered
+		## ===> Saved
+#		qZuc = np.vstack( [ self.qY[:,self.col_ucond][i:(i+self.lag_keep),:] for i in idx_bsc[:-1] ] + [self.qY[:,self.col_ucond][(idx_bsc[-1]+n_last):(idx_bsc[-1]+self.lag_search),:]] )
+#		
+#		## Now build qZ
+#		qZ_unordered = np.hstack( (qXc,qZuc) )
+#		qZ = np.zeros_like( qZ_unordered )
+#		qZ[:,self.col_cond + self.col_ucond] = qZ_unordered
+		## <===
+		
+		## ===> New
+		qZ = np.vstack( [ self.qY[i:(i+self.lag_keep),:] for i in idx_bsc[:-1] ] + [self.qY[(idx_bsc[-1]+n_last):(idx_bsc[-1]+self.lag_search),:]] )
+		## <===
 		
 		## And finaly inverse quantiles
 		Z = rvX.ppf(qZ)
@@ -432,12 +439,18 @@ class MVRanksShuffle: ##{{{
 		## NOTE: Here we split into lag_keep values, and some last missing values
 		## lag_search - n_last is the numbers of last missing values.
 		n_last = self.lag_search - (n_samplesX - (bsXc.shape[0] - 1) * self.lag_keep)
-		qZuc = np.vstack( [ qY[:,self.col_ucond][i:(i+self.lag_keep),:] for i in idx_bsc[:-1] ] + [qY[:,self.col_ucond][(idx_bsc[-1]+n_last):(idx_bsc[-1]+self.lag_search),:]] )
+		## ===> Saved
+#		qZuc = np.vstack( [ self.qY[:,self.col_ucond][i:(i+self.lag_keep),:] for i in idx_bsc[:-1] ] + [self.qY[:,self.col_ucond][(idx_bsc[-1]+n_last):(idx_bsc[-1]+self.lag_search),:]] )
+#		
+#		## Now build qZ
+#		qZ_unordered = np.hstack( (qXc,qZuc) )
+#		qZ = np.zeros_like( qZ_unordered )
+#		qZ[:,self.col_cond + self.col_ucond] = qZ_unordered
+		## <===
 		
-		## Now build qZ
-		qZ_unordered = np.hstack( (qXc,qZuc) )
-		qZ = np.zeros_like( qZ_unordered )
-		qZ[:,self.col_cond + self.col_ucond] = qZ_unordered
+		## ===> New
+		qZ = np.vstack( [ self.qY[i:(i+self.lag_keep),:] for i in idx_bsc[:-1] ] + [self.qY[(idx_bsc[-1]+n_last):(idx_bsc[-1]+self.lag_search),:]] )
+		## <===
 		
 		## And finaly inverse ranks
 		Xs = np.sort( X , axis = 0 )
