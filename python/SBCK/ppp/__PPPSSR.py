@@ -29,8 +29,45 @@ from .__PrePostProcessing import PrePostProcessing
 ###########
 
 class PPPSSR(PrePostProcessing): ##{{{
+	"""
+	SBCK.ppp.PPPSSR
+	===============
+	
+	Apply the SSR transformation. The SSR transformation replace the 0 by a
+	random values between 0 and the minimal non zero value (the threshold). The
+	inverse transform replace all values lower than the threshold by 0. The
+	threshold used for inverse transform is given by the keyword `isaved`, which
+	takes the value `Y0` (reference in calibration period), or `X0` (biased in
+	calibration period), or `X1` (biased in projection period)
+	
+	>>> ## Start with data
+	>>> Y0,X0,X1 = SBCK.datasets.like_tas_pr(2000)
+	>>> 
+	>>> ## Define the PPP method
+	>>> ppp = SBCK.ppp.PPPSSR( bc_method = SBCK.CDFt , cols = 2 )
+	>>> 
+	>>> ## And now the correction
+	>>> ppp.fit(Y0,X0,X1)
+	>>> Z1,Z0 = ppp.predict(X1,X0)
+	"""
 	
 	def __init__( self , *args , cols = None , isaved = "Y0" , **kwargs ): ##{{{
+		"""
+		Constructor
+		===========
+		
+		Arguments
+		---------
+		cols: [int or array of int]
+			The columns to apply the SSR
+		isaved: str
+			Choose the threshold used for inverse transform. Can be "Y0", "X0"
+			or "X1"
+		*args:
+			All others arguments are passed to SBCK.ppp.PrePostProcessing
+		*kwargs:
+			All others arguments are passed to SBCK.ppp.PrePostProcessing
+		"""
 		PrePostProcessing.__init__( self , *args , **kwargs )
 		self.Xn        = None
 		self._cols     = cols
@@ -39,6 +76,9 @@ class PPPSSR(PrePostProcessing): ##{{{
 		
 		if cols is not None:
 			self._cols = np.array( [cols] , dtype = int ).squeeze()
+		
+		if isaved not in [0,1,2,"Y0","X0","X1"]:
+			raise ValueError(f"isaved (={isaved}) parameter must be in [0,1,2,'Y0','X0','X1']")
 		
 		if isaved == "Y0":
 			self._isaved = 0
@@ -49,6 +89,9 @@ class PPPSSR(PrePostProcessing): ##{{{
 	##}}}
 	
 	def transform( self , X ):##{{{
+		"""
+    	Apply the SSR transform.
+		"""
 		self._icurrent += 1
 		
 		if self._cols is None:
@@ -67,6 +110,9 @@ class PPPSSR(PrePostProcessing): ##{{{
 	##}}}
 	
 	def itransform( self , Xt ):##{{{
+		"""
+    	Apply the SSR inverse transform.
+		"""
 		
 		X = Xt.copy()
 		cols = self._cols

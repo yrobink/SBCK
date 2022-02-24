@@ -30,9 +30,49 @@ class PrePostProcessing:##{{{
 	SBCK.ppp.PrePostProcessing
 	==========================
 	
-	Base class to apply pre / post processing operations before / after a bias
-	correction method. This class is equivalent to apply the identity function,
-	and is used to be herited by others PrePostProcessing classes.
+	This base class can be considered as the identity pre-post processing, and
+	is used to be herited by others pre/post processing class. The key ideas are:
+	- A PrePostProcessing based class contains a bias correction method, initalized
+	  by the `bc_method` argument, always available for all herited class
+	- The `pipe` keyword is a list of pre/post processing class, applied one after
+	  the other.
+	
+	Try with an example, start with a dataset similar to tas/pr:
+	>>> Y0,X0,X1 = SBCK.datasets.like_tas_pr(2000)
+	
+	The first column is Gaussian, but the second is an exponential law with a Dirac
+	mass at 0, represented the 0 of precipitations. For a quantile mapping
+	correction in the calibration period, we just apply:
+	>>> qm = SBCK.QM()
+	>>> qm.fit(Y0,X0)
+	>>> Z0 = qm.predict(X0)
+	
+	Now, if we want to pre-post process with the SSR method (0 are replaced by
+	random values between 0 (excluded) and the minimal non zero value), we write:
+	>>> ppp = SBCK.ppp.PPPSSR( bc_method = SBCK.QM , cols = [2] )
+	>>> ppp.fit(Y0,X0)
+	>>> Z0 = ppp.predict(X0)
+	
+	The SSR approach is applied only on the second column (the precipitation), and
+	the syntax is the same than for a simple bias correction method.
+	
+	Imagine now that we want to apply the SSR, and to ensure the positivity of CDFt
+	for precipitation, we also want to use the LogLinLink pre-post processing
+	method. This can be done with the following syntax:
+	>>> ppp = SBCK.ppp.PPPLogLinLink( bc_method = SBCK.CDFt , cols = [2] ,
+	>>>                               pipe = [SBCK.ppp.PPPSSR] ,
+	>>>                               pipe_kwargs = [{"cols" : 2}] )
+	>>> ppp.fit(Y0,X0,X1)
+	>>> Z = ppp.predict(X1,X0)
+	
+	With this syntax, the pre processing operation is
+	PPPLogLinLink.transform(PPPSSR.transform(data)) and post processing operation
+	PPPSSR.itransform(PPPLogLinLink.itransform(bc_data)). So the formula can read
+	from right to left (as the mathematical composition). Note it is equivalent
+	to define:
+	>>> ppp = SBCK.ppp.PrePostProcessing$new( bc_method = SBCK.CDFt,
+	>>>                          pipe = [SBCK.ppp.PPPLogLinLink,SBCK.ppp.PPPSSR],
+	>>>                          pipe_kwargs = [ {"cols":2} , {"cols":2} ] )
 	
 	"""
 	
