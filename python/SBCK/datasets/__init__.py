@@ -23,4 +23,5 @@ from .__multivariates import gaussian_exp_2d
 from .__multivariates import gaussian_L_2d
 from .__multivariates import bimodal_reverse_2d
 from .__multivariates import gaussian_dd
+from .__multivariates import like_tas_pr
 

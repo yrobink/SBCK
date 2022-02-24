@@ -22,7 +22,11 @@
 ###############
 
 import numpy as np
+import scipy.stats as sc
 import sklearn.datasets as skd
+
+from ..__QM import QM
+
 
 ###############
 ## Functions ##
@@ -155,6 +159,63 @@ def gaussian_dd( n_samples , n_features = 2 ):##{{{
 	X0 = np.random.multivariate_normal( mean = np.zeros(n_features)     , cov = skd.make_spd_matrix(n_features) , size = n_samples )
 	X1 = np.random.multivariate_normal( mean = np.zeros(n_features) + 5 , cov = skd.make_spd_matrix(n_features) , size = n_samples )
 	Y0 = np.random.multivariate_normal( mean = np.zeros(n_features) - 2 , cov = skd.make_spd_matrix(n_features) , size = n_samples )
+	return Y0,X0,X1
+##}}}
+
+def like_tas_pr( n_samples ):##{{{
+	"""
+	SBCK.datasets.like_tas_pr
+	=========================
+	
+	Build a test dataset such that X0, X1 and Y0 are similar to temperature/
+	precipitation.
+	
+	The method is the following:
+	- Data from a multivariate normal law (dim = 2) are drawn
+	- The quantile mapping is used to map the last column into the exponential law
+	- Values lower than a fixed quantile are replaced by 0
+	
+	Parameters
+	----------
+	n_samples : integer
+		Number of samples in X0, X1 and Y0
+	
+	Returns
+	-------
+	Y0,X0,X1 : tuple
+		- Y0 reference dataset in calibration period
+		- X0 biased dataset in calibration period
+		- X1 biased dataset in projection period
+	"""
+	n_dim = 2
+	
+	mX0   = np.array([5 for _ in range(n_dim-1)] + [0])
+	mX1   = np.array([8 for _ in range(n_dim-1)] + [0])
+	mY0   = np.zeros(n_dim)
+	covX0 = skd.make_spd_matrix(n_dim)
+	covX1 = skd.make_spd_matrix(n_dim)
+	covY0 = skd.make_spd_matrix(n_dim)
+	
+	X0 = np.random.multivariate_normal( mean = mX0 , cov = covX0 , size = n_samples )
+	X1 = np.random.multivariate_normal( mean = mX1 , cov = covX1 , size = n_samples )
+	Y0 = np.random.multivariate_normal( mean = mY0 , cov = covY0 , size = n_samples )
+	
+	qm = QM( distY0 = sc.expon( scale = 1 ) )
+	qm.fit(None,Y0[:,-1])
+	Y0[:,-1] = qm.predict(Y0[:,-1]).squeeze()
+	
+	qm = QM( distY0 = sc.expon( scale = 0.5 ) )
+	qm.fit(None,X0[:,-1])
+	X0[:,-1] = qm.predict(X0[:,-1]).squeeze()
+	
+	qm = QM( distY0 = sc.expon( scale = 1 ) )
+	qm.fit(None,X1[:,-1])
+	X1[:,-1] = qm.predict(X1[:,-1]).squeeze()
+	
+	X0[X0[:,-1] < np.quantile(X0[:,-1],0.05),-1] = 0
+	X1[X0[:,-1] < np.quantile(X1[:,-1],0.10),-1] = 0
+	Y0[Y0[:,-1] < np.quantile(Y0[:,-1],0.35),-1] = 0
+	
 	return Y0,X0,X1
 ##}}}
 
