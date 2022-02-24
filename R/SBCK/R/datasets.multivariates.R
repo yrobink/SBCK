@@ -165,3 +165,65 @@ dataset_bimodal_reverse_2d = function(n_samples)
 
 ##}}}
 
+# dataset_like_tas_pr ##{{{
+
+#' dataset_like_tas_pr
+#'
+#' Generate a testing dataset similar to temperature and precipitation.
+#' The method is the following:
+#' - Data from a multivariate normal law (dim = 2) are drawn
+#' - The quantile mapping is used to map the last column into the exponential law
+#' - Values lower than a fixed quantile are replaced by 0
+#'
+#' @param n_samples [integer] numbers of samples drawn
+#'        
+#' @return [list] a list containing X0, X1 (biased in calibration/projection)
+#'         and Y0 (reference in calibration)
+#'
+#' @examples
+#' XY = SBCK::dataset_like_tas_pr(2000)
+#' XY$X0 ## Biased in calibration period
+#' XY$Y0 ## Reference in calibration period
+#' XY$X1 ## Biased in projection period
+#'
+#' @export
+dataset_like_tas_pr = function(n_samples)
+{
+	n_dim = 2
+	
+	## Start from a multivariate Normal law
+	mX0   = base::c( numeric(n_dim-1) + 5 , 0 )
+	mX1   = base::c( numeric(n_dim-1) + 8 , 0 )
+	mY0   = numeric(n_dim)
+	covX0 = ROOPSD::rspd_matrix(n_dim)
+	covX1 = ROOPSD::rspd_matrix(n_dim)
+	covY0 = ROOPSD::rspd_matrix(n_dim)
+	
+	X0 = ROOPSD::rmultivariate_normal( n = n_samples , mean = mX0 , cov = covX0 )
+	X1 = ROOPSD::rmultivariate_normal( n = n_samples , mean = mX1 , cov = covX1 )
+	Y0 = ROOPSD::rmultivariate_normal( n = n_samples , mean = mY0 , cov = covY0 )
+	
+	## Transform last column with quantile mapping
+	qm = SBCK::QM$new( distY0 = ROOPSD::Exponential$new( rate = 1 ) )
+	qm$fit(NULL,Y0[,n_dim])
+	Y0[,n_dim] = qm$predict(Y0[,n_dim])
+	
+	qm = SBCK::QM$new( distY0 = ROOPSD::Exponential$new( rate = 2 ) )
+	qm$fit(NULL,X0[,n_dim])
+	X0[,n_dim] = qm$predict(X0[,n_dim])
+	
+	qm = SBCK::QM$new( distY0 = ROOPSD::Exponential$new( rate = 1 ) )
+	qm$fit(NULL,X1[,n_dim])
+	X1[,n_dim] = qm$predict(X1[,n_dim])
+	
+	
+	## And add Dirac mass at 0
+	X0[X0[,n_dim] < stats::quantile(X0[,n_dim],0.05),n_dim] = 0
+	X1[X1[,n_dim] < stats::quantile(X0[,n_dim],0.10),n_dim] = 0
+	Y0[Y0[,n_dim] < stats::quantile(Y0[,n_dim],0.35),n_dim] = 0
+	
+	return( list( X0 = X0 , X1 = X1 , Y0 = Y0 ) )
+}
+
+##}}}
+
