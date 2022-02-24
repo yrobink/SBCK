@@ -177,7 +177,7 @@ class PrePostProcessing:##{{{
 			Z0t = self._bc_method.predict(X0t)
 			return self._pipe_itransform(Z0t)
 		else:
-			Z1t,Z0t = self._bc_method.predict(X1t,Z0t)
+			Z1t,Z0t = self._bc_method.predict(X1t,X0t)
 			Z1 = self._pipe_itransform(Z1t)
 			Z0 = self._pipe_itransform(Z0t)
 			return Z1,Z0
