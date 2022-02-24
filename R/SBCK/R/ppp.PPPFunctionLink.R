@@ -21,29 +21,33 @@
 #' PPPFunctionLink
 #'
 #' @description
-#' Base class to build link function pre-post processing class
+#' Base class to build link function pre-post processing class. See also
+#' the PrePostProcessing documentation
 #'
 #' @details
-#' Base class to build link function pre-post processing class
+#' This class is used to define pre/post processing class with a link function
+#' and its inverse. See example.
 #'
 #' @examples
-#' ## Three bivariate random variables (rnorm and rexp are inverted between ref
-#' ## and bias)
-#' XY = SBCK::dataset_gaussian_exp_2d(2000)
-#' X0 = XY$X0 ## Biased in calibration period
-#' Y0 = XY$Y0 ## Reference in calibration period
-#' X1 = XY$X1 ## Biased in projection period
-#'
-#'
+#' ## Start with data
+#' XY = SBCK::dataset_like_tas_pr(2000)
+#' X0 = XY$X0
+#' X1 = XY$X1
+#' Y0 = XY$Y0
+#' 
+#' ## Define the link function
+#' transform  = function(x) { return(x^3) }
+#' itransform = function(x) { return(x^(1/3)) }
+#' 
+#' ## And the PPP method
+#' ppp = PPPFunctionLink$new( bc_method = CDFt , transform = transform ,
+#'                                              itransform = itransform )
+#' 
+#' ## And now the correction
 #' ## Bias correction
-#' ## Step 1 : construction of the class RBC
-#' ppp = PPPSSR$new( bc_method = SBCK::CDFt , cols = 2 ) 
-#' ## Step 2 : Fit the bias correction model
-#' ppp$fit( Y0 , X0 , X1 )
-#' ## Step 3 : perform the bias correction
-#' Z = ppp$predict(X1,X0) 
-#' ## Z$Z0 # BC of X0
-#' ## Z$Z1 # BC of X1
+#' ppp$fit(Y0,X0,X1)
+#' Z = ppp$predict(X1,X0)
+#' 
 #' @export
 PPPFunctionLink = R6::R6Class( "PPPFunctionLink" ,
 	
@@ -123,29 +127,27 @@ PPPFunctionLink = R6::R6Class( "PPPFunctionLink" ,
 #' PPPSquareLink
 #'
 #' @description
-#' Square link function
+#' Square link function. See also the PrePostProcessing documentation.
 #'
 #' @details
-#' Square link function
+#' Square link function. The transform is x^2, and the sign(x)*sqrt(abs(x)) its
+#' inverse.
 #'
 #' @examples
-#' ## Three bivariate random variables (rnorm and rexp are inverted between ref
-#' ## and bias)
-#' XY = SBCK::dataset_gaussian_exp_2d(2000)
-#' X0 = XY$X0 ## Biased in calibration period
-#' Y0 = XY$Y0 ## Reference in calibration period
-#' X1 = XY$X1 ## Biased in projection period
-#'
-#'
+#' ## Start with data
+#' XY = SBCK::dataset_like_tas_pr(2000)
+#' X0 = XY$X0
+#' X1 = XY$X1
+#' Y0 = XY$Y0
+#' 
+#' ## Define the PPP method
+#' ppp = PPPSquareLink$new( bc_method = CDFt , cols = 2 )
+#' 
+#' ## And now the correction
 #' ## Bias correction
-#' ## Step 1 : construction of the class RBC
-#' ppp = PPPSSR$new( bc_method = SBCK::CDFt , cols = 2 ) 
-#' ## Step 2 : Fit the bias correction model
-#' ppp$fit( Y0 , X0 , X1 )
-#' ## Step 3 : perform the bias correction
-#' Z = ppp$predict(X1,X0) 
-#' ## Z$Z0 # BC of X0
-#' ## Z$Z1 # BC of X1
+#' ppp$fit(Y0,X0,X1)
+#' Z = ppp$predict(X1,X0)
+#' 
 #' @export
 PPPSquareLink = R6::R6Class( "PPPSquareLink" ,
 	
@@ -189,29 +191,29 @@ PPPSquareLink = R6::R6Class( "PPPSquareLink" ,
 #' PPPLogLinLink
 #'
 #' @description
-#' Log linear link function
+#' Log linear link function. See also the PrePostProcessing documentation.
 #'
 #' @details
-#' Log linear link function
+#' Log linear link function. The transform is log(x) if 0 < x < 1, else x -1,
+#' and the inverse transform exp(x) if x < 0, else x + 1.
 #'
 #' @examples
-#' ## Three bivariate random variables (rnorm and rexp are inverted between ref
-#' ## and bias)
-#' XY = SBCK::dataset_gaussian_exp_2d(2000)
-#' X0 = XY$X0 ## Biased in calibration period
-#' Y0 = XY$Y0 ## Reference in calibration period
-#' X1 = XY$X1 ## Biased in projection period
-#'
-#'
+#' ## Start with data
+#' XY = SBCK::dataset_like_tas_pr(2000)
+#' X0 = XY$X0
+#' X1 = XY$X1
+#' Y0 = XY$Y0
+#' 
+#' ## Define the PPP method
+#' ppp = PPPLogLinLink$new( bc_method = CDFt , cols = 2 ,
+#'                          pipe = list(PPPSSR),
+#'                          pipe_kwargs = list(list(cols=2)) )
+#' 
+#' ## And now the correction
 #' ## Bias correction
-#' ## Step 1 : construction of the class RBC
-#' ppp = PPPSSR$new( bc_method = SBCK::CDFt , cols = 2 ) 
-#' ## Step 2 : Fit the bias correction model
-#' ppp$fit( Y0 , X0 , X1 )
-#' ## Step 3 : perform the bias correction
-#' Z = ppp$predict(X1,X0) 
-#' ## Z$Z0 # BC of X0
-#' ## Z$Z1 # BC of X1
+#' ppp$fit(Y0,X0,X1)
+#' Z = ppp$predict(X1,X0)
+#' 
 #' @export
 PPPLogLinLink = R6::R6Class( "PPPLogLinLink" ,
 	

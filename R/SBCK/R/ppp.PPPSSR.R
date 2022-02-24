@@ -21,29 +21,31 @@
 #' PPPSSR
 #'
 #' @description
-#' Apply the SSR transformation
+#' Apply the SSR transformation.
 #'
 #' @details
-#' Apply the SSR transformation
+#' Apply the SSR transformation. The SSR transformation replace the 0 by a
+#' random values between 0 and the minimal non zero value (the threshold). The
+#' inverse transform replace all values lower than the threshold by 0. The
+#' threshold used for inverse transform is given by the keyword `isaved`, which
+#' takes the value `Y0` (reference in calibration period), or `X0` (biased in
+#' calibration period), or `X1` (biased in projection period)
 #'
 #' @examples
-#' ## Three bivariate random variables (rnorm and rexp are inverted between ref
-#' ## and bias)
-#' XY = SBCK::dataset_gaussian_exp_2d(2000)
-#' X0 = XY$X0 ## Biased in calibration period
-#' Y0 = XY$Y0 ## Reference in calibration period
-#' X1 = XY$X1 ## Biased in projection period
-#'
-#'
+#' ## Start with data
+#' XY = SBCK::dataset_like_tas_pr(2000)
+#' X0 = XY$X0
+#' X1 = XY$X1
+#' Y0 = XY$Y0
+#' 
+#' ## Define the PPP method
+#' ppp = PPPSSR$new( bc_method = CDFt , cols = 2 )
+#' 
+#' ## And now the correction
 #' ## Bias correction
-#' ## Step 1 : construction of the class RBC
-#' ppp = PPPSSR$new( bc_method = SBCK::CDFt , cols = 2 ) 
-#' ## Step 2 : Fit the bias correction model
-#' ppp$fit( Y0 , X0 , X1 )
-#' ## Step 3 : perform the bias correction
-#' Z = ppp$predict(X1,X0) 
-#' ## Z$Z0 # BC of X0
-#' ## Z$Z1 # BC of X1
+#' ppp$fit(Y0,X0,X1)
+#' Z = ppp$predict(X1,X0)
+#' 
 #' @export
 PPPSSR = R6::R6Class( "PPPSSR" ,
 	

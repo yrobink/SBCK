@@ -25,26 +25,70 @@
 #' Base class to pre/post process data before/after a bias correction
 #'
 #' @details
-#' Equivalent to the identity
+#' This base class can be considered as the identity pre-post processing, and
+#' is used to be herited by others pre/post processing class. The key ideas are:\cr
+#' - A PrePostProcessing based class contains a bias correction method, initalized
+#'   by the `bc_method` argument, always available for all herited class\cr
+#' - The `pipe` keyword is a list of pre/post processing class, applied one after
+#'   the other.\cr
+#' 
+#' Try with an example, start with a dataset similar to tas/pr:\cr
+#' >>> XY = SBCK::dataset_like_tas_pr(2000)\cr
+#' >>> X0 = XY$X0\cr
+#' >>> X1 = XY$X1\cr
+#' >>> Y0 = XY$Y0\cr
+#' 
+#' The first column is Gaussian, but the second is an exponential law with a Dirac
+#' mass at 0, represented the 0 of precipitations. For a quantile mapping
+#' correction in the calibration period, we just apply\cr
+#' >>> qm = SBCK::QM$new()\cr
+#' >>> qm$fit(Y0,X0)\cr
+#' >>> Z0 = qm$predict(X0)\cr
+#' 
+#' Now, if we want to pre-post process with the SSR method (0 are replaced by
+#' random values between 0 (excluded) and the minimal non zero value), we write:\cr
+#' >>> ppp = SBCK::PPPSSR$new( bc_method = QM , cols = 2 )\cr
+#' >>> ppp$fit(Y0,X0)\cr
+#' >>> Z0 = ppp$predict(X0)\cr
+#' 
+#' The SSR approach is applied only on the second column (the precipitation), and
+#' the syntax is the same than for a simple bias correction method.\cr
+#' 
+#' Imagine now that we want to apply the SSR, and to ensure the positivity of CDFt
+#' for precipitation, we also want to use the LogLinLink pre-post processing
+#' method. This can be done with the following syntax:\cr
+#' >>> ppp = PPPLogLinLink$new( bc_method = CDFt , cols = 2 ,\cr
+#' >>>                          pipe = list(PPPSSR) , \cr
+#' >>>                          pipe_kwargs = list( list(cols = 2) ) )\cr
+#' >>> ppp$fit(Y0,X0,X1)\cr
+#' >>> Z = ppp$predict(X1,X0)\cr
+#' 
+#' With this syntax, the pre processing operation is
+#' PPPLogLinLink$transform(PPPSSR$transform(data)) and post processing operation
+#' PPPSSR$itransform(PPPLogLinLink$itransform(bc_data)). So the formula can read
+#' from right to left (as the mathematical composition). Note it is equivalent
+#' to define:\cr
+#' >>> ppp = PrePostProcessing$new( bc_method = CDFt,\cr
+#' >>>                              pipe = list(PPPLogLinLink,PPPSSR),\cr
+#' >>>                              pipe_kwargs = list( list(cols=2) , list(cols=2) ) )\cr
+#' 
 #'
 #' @examples
-#' ## Three bivariate random variables (rnorm and rexp are inverted between ref
-#' ## and bias)
-#' XY = SBCK::dataset_gaussian_exp_2d(2000)
-#' X0 = XY$X0 ## Biased in calibration period
-#' Y0 = XY$Y0 ## Reference in calibration period
-#' X1 = XY$X1 ## Biased in projection period
-#'
+#' ## Start with data
+#' XY = SBCK::dataset_like_tas_pr(2000)
+#' X0 = XY$X0
+#' X1 = XY$X1
+#' Y0 = XY$Y0
+#' 
+#' ## Define pre/post processing method
+#' ppp = PrePostProcessing$new( bc_method = CDFt,
+#'                              pipe = list(PPPLogLinLink,PPPSSR),
+#'                              pipe_kwargs = list( list(cols=2) , list(cols=2) ) )
 #'
 #' ## Bias correction
-#' ## Step 1 : construction of the class RBC
-#' ppp = PrePostProcessing$new( bc_method = SBCK::CDFt ) 
-#' ## Step 2 : Fit the bias correction model
-#' ppp$fit( Y0 , X0 , X1 )
-#' ## Step 3 : perform the bias correction
-#' Z = ppp$predict(X1,X0) 
-#' ## Z$Z0 # BC of X0
-#' ## Z$Z1 # BC of X1
+#' ppp$fit(Y0,X0,X1)
+#' Z = ppp$predict(X1,X0)
+#' 
 #' @export
 PrePostProcessing = R6::R6Class( "PrePostProcessing" ,
 	
@@ -156,7 +200,7 @@ PrePostProcessing = R6::R6Class( "PrePostProcessing" ,
 		}
 		else
 		{
-			Z01t = private$.bc_method$predict(X1t,Z0t)
+			Z01t = private$.bc_method$predict(X1t,X0t)
 			Z1 = private$pipe_itransform(Z01t$Z1)
 			Z0 = private$pipe_itransform(Z01t$Z0)
 			return( list( Z1 = Z1 , Z0 = Z0 ) )
