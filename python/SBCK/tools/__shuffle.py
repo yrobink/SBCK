@@ -246,6 +246,7 @@ class MVQuantilesShuffle: ##{{{
 		self.col_cond   = col_cond
 		self.lag_search = lag_search
 		self.lag_keep   = lag_keep
+		self._w         = 1
 	##}}}
 	
 	def fit( self , Y ):##{{{
@@ -311,7 +312,7 @@ class MVQuantilesShuffle: ##{{{
 		bsXc = np.array( [ qXc[tiX[:,i],:].ravel() for i in range(0,n_samplesX-self.lag_search+1,self.lag_keep) ] + [qXc[tiX[:,-1],:].ravel()] )
 		
 		## Now pairwise dist between cond. X / Y block search
-		bsdistc = ssd.cdist( bsXc , self.bsYc )
+		bsdistc = ssd.cdist( self._w * bsXc , self._w * self.bsYc )
 		idx_bsc = np.argmin( bsdistc , axis = 1 )
 		
 		## Find associated quantiles in unconditioning Y
