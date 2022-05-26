@@ -89,7 +89,7 @@ class PPPDiffRef(PrePostProcessing): ##{{{
 	
 	def transform( self , X ):##{{{
 		"""
-    	Apply the SSR transform.
+    	Apply the DiffReff transform.
 		"""
 		
 		Xt = X.copy()
@@ -107,7 +107,7 @@ class PPPDiffRef(PrePostProcessing): ##{{{
 	
 	def itransform( self , Xt ):##{{{
 		"""
-    	Apply the SSR inverse transform.
+    	Apply the inverse DiffRef transform.
 		"""
 		
 		X = Xt.copy()
