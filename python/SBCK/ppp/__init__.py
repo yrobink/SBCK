@@ -18,8 +18,10 @@
 
 
 from .__PrePostProcessing import PrePostProcessing
-from .__PPPSSR          import PPPSSR
-from .__PPPFunctionLink import PPPFunctionLink
-from .__PPPFunctionLink import PPPSquareLink
-from .__PPPFunctionLink import PPPLogLinLink
+from .__PPPSSR            import PPPSSR
+from .__PPPFunctionLink   import PPPFunctionLink
+from .__PPPFunctionLink   import PPPSquareLink
+from .__PPPFunctionLink   import PPPLogLinLink
+from .__PPPDiffRef        import PPPDiffRef
+
 
