@@ -23,6 +23,7 @@
 ###############
 
 import sys,os
+import sysconfig
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 import setuptools
@@ -63,8 +64,7 @@ class get_pybind_include(object):##{{{
 ##}}}
 
 def get_eigen_include( propose_path = "" ):##{{{
-	
-	possible_path = [ propose_path , "/usr/include/" , "/usr/local/include/" ]
+	possible_path = [ propose_path , os.path.dirname(sysconfig.get_paths()['include']), "/usr/include/" , "/usr/local/include/" ]
 	if os.environ.get("HOME") is not None:
 		possible_path.append( os.path.join( os.environ["HOME"] , ".local/include" ) )
 	
