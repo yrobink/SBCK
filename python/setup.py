@@ -175,9 +175,9 @@ list_packages = [
 ## Infos from release ##
 ########################
 
-here = os.path.abspath(os.path.dirname(__file__)
+here = os.path.abspath( os.path.dirname(__file__) )
 
-with open( os.path.join(here, "SBCK/__release.py") , "r" ) as f:
+with open( os.path.join(here, "SBCK/__release.py"), "r" ) as f:
 	lines = f.readlines()
 
 version_major = None
@@ -224,7 +224,7 @@ setup(
 	cmdclass         = {'build_ext': BuildExt},
 	zip_safe         = False,
 	packages         = list_packages,
-	package_dir      = { "SBCK" : os.path.join( here, "SBCK" ) }
+	package_dir      = { "SBCK" : os.path.join(here, "SBCK") }
 )
 
 
