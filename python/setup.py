@@ -157,9 +157,9 @@ ext_modules = [
 		],
 		language='c++',
 		depends = [
-			os.path.join(here, "SBCK/tools/src/SparseHist.hpp")
-			os.path.join(here, "SBCK/tools/src/NetworkSimplex.hpp")
-			os.path.join(here, "SBCK/tools/src/NetworkSimplexLemon.hpp")
+			"SBCK/tools/src/SparseHist.hpp"
+			"SBCK/tools/src/NetworkSimplex.hpp"
+			"SBCK/tools/src/NetworkSimplexLemon.hpp"
 			]
 	),
 ]
