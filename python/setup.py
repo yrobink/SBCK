@@ -44,7 +44,12 @@ for i,arg in enumerate(sys.argv):
 
 if i_eigen > -1:
 	del sys.argv[i_eigen]
+	
+############################
+## Python path resolution ##
+############################
 
+here = os.path.abspath( os.path.dirname(__file__) )
 
 ################################################################
 ## Some class and function to compile with Eigen and pybind11 ##
@@ -142,8 +147,8 @@ class BuildExt(build_ext):##{{{
 
 ext_modules = [
 	Extension(
-		'SBCK.tools.__tools_cpp',
-		['SBCK/tools/src/tools.cpp'],
+		os.path.join(here, 'SBCK.tools.__tools_cpp'),
+		[ os.path.join(here, 'SBCK/tools/src/tools.cpp') ],
 		include_dirs=[
 			# Path to pybind11 headers
 			get_eigen_include(eigen_usr_include),
@@ -152,9 +157,9 @@ ext_modules = [
 		],
 		language='c++',
 		depends = [
-			"SBCK/tools/src/SparseHist.hpp"
-			"SBCK/tools/src/NetworkSimplex.hpp"
-			"SBCK/tools/src/NetworkSimplexLemon.hpp"
+			os.path.join(here, "SBCK/tools/src/SparseHist.hpp")
+			os.path.join(here, "SBCK/tools/src/NetworkSimplex.hpp")
+			os.path.join(here, "SBCK/tools/src/NetworkSimplexLemon.hpp")
 			]
 	),
 ]
@@ -174,8 +179,6 @@ list_packages = [
 ########################
 ## Infos from release ##
 ########################
-
-here = os.path.abspath( os.path.dirname(__file__) )
 
 with open( os.path.join(here, "SBCK/__release.py"), "r" ) as f:
 	lines = f.readlines()
