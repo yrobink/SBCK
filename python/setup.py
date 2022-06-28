@@ -147,7 +147,7 @@ class BuildExt(build_ext):##{{{
 
 ext_modules = [
 	Extension(
-		os.path.join(here, 'SBCK.tools.__tools_cpp'),
+		"SBCK.tools.__tools_cpp",
 		[ os.path.join(here, 'SBCK/tools/src/tools.cpp') ],
 		include_dirs=[
 			# Path to pybind11 headers
