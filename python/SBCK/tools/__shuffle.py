@@ -38,6 +38,7 @@
 ## Libraries ##
 ###############
 
+import logging
 import numpy        as np
 import scipy.stats  as sc
 import scipy.linalg as scl
@@ -47,6 +48,8 @@ from .__rv_extend import mrv_histogram
 #############
 ## Classes ##
 #############
+
+logger = logging.getLogger(__name__)
 
 class SchaakeShuffle:##{{{
 	"""
@@ -247,6 +250,12 @@ class MVQuantilesShuffle: ##{{{
 		self.lag_search = lag_search
 		self.lag_keep   = lag_keep
 		self._w         = 1
+		
+		if self.logger.isEnabledFor(logging.DEBUG):
+			self.logger.debug( f"Arguments:" )
+			self.logger.debug( f"   * col_cond  : {self.col_cond}" )
+			self.logger.debug( f"   * lag_search: {self.lag_search}" )
+			self.logger.debug( f"   * lag_keep  : {self.lag_keep}" )
 	##}}}
 	
 	def fit( self , Y ):##{{{
@@ -276,6 +285,10 @@ class MVQuantilesShuffle: ##{{{
 		## Build conditionning block search
 		qYc = self.qY[:,self.col_cond]
 		self.bsYc = np.array( [ qYc[tiY[:,i],:].ravel() for i in range(n_samplesY-self.lag_search+1) ] )
+		
+		if self.logger.isEnabledFor(logging.DEBUG):
+			self.logger.debug( f"tiY.shape: {tiY.shape}" )
+			self.logger.debug( f"self.bsYc.shape: {self.bsYc.shape}" )
 	##}}}
 	
 	def transform( self , X ): ##{{{
@@ -301,6 +314,7 @@ class MVQuantilesShuffle: ##{{{
 		
 		## Index to build block search matrix
 		tiX  = (n_samplesX - 1 - scl.toeplitz(range(n_samplesX)))[::-1,:][:self.lag_search,:(n_samplesX-self.lag_search+1)]
+		if self.logger.isEnabledFor(logging.DEBUG): self.logger.debug( f"tiX.shape: {tiX.shape}" )
 		
 		## Find quantiles (i.e. ranks)
 		qX = rvX.cdf(X)
@@ -310,15 +324,20 @@ class MVQuantilesShuffle: ##{{{
 		## are missing
 		qXc = qX[:,self.col_cond]
 		bsXc = np.array( [ qXc[tiX[:,i],:].ravel() for i in range(0,n_samplesX-self.lag_search+1,self.lag_keep) ] + [qXc[tiX[:,-1],:].ravel()] )
+		if self.logger.isEnabledFor(logging.DEBUG): self.logger.debug( f"bsXc.shape: {bsXc.shape}" )
 		
 		## Now pairwise dist between cond. X / Y block search
 		bsdistc = ssd.cdist( self._w * bsXc , self._w * self.bsYc )
 		idx_bsc = np.argmin( bsdistc , axis = 1 )
+		if self.logger.isEnabledFor(logging.DEBUG):
+			self.logger.debug( f"idx_bsc.shape: {idx_bsc.shape}" )
+			self.logger.debug( f"idx_bsc[-1]  : {idx_bsc[-1]}" )
 		
 		## Find associated quantiles in unconditioning Y
 		## NOTE: Here we split into lag_keep values, and some last missing values
 		## lag_search - n_last is the numbers of last missing values.
 		n_last = self.lag_search - (n_samplesX - (bsXc.shape[0] - 1) * self.lag_keep)
+		if self.logger.isEnabledFor(logging.DEBUG): self.logger.debug( f"n_last: {n_last}" )
 		
 		## ===> Saved
 #		qZuc = np.vstack( [ self.qY[:,self.col_ucond][i:(i+self.lag_keep),:] for i in idx_bsc[:-1] ] + [self.qY[:,self.col_ucond][(idx_bsc[-1]+n_last):(idx_bsc[-1]+self.lag_search),:]] )
@@ -337,6 +356,12 @@ class MVQuantilesShuffle: ##{{{
 		Z = rvX.ppf(qZ)
 		
 		return Z
+	##}}}
+	
+	## Logging ##{{{
+	@property
+	def logger(self):
+		return logging.getLogger( f"{__name__}.{__class__.__name__}" )
 	##}}}
 	
 ##}}}
