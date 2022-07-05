@@ -602,7 +602,18 @@ MVQuantilesShuffle = R6::R6Class( "MVQuantilesShuffle" ,
 		}
 		idxl = idx_bsc[length(idx_bsc)]
 		if( n_last < self$lag_search )
-			qZ = rbind( qZ , self$qY[(idxl+n_last):(idxl+self$lag_search),,drop=FALSE] )
+		{
+			i0 = idxl + n_last
+			i1 = idxl + self$lag_search
+			if( i1 > nrow(self$qY) )
+			{
+				b  = i1 - nrow(self$qY)
+				i0 = i0 - b
+				i1 = i1 - b
+			}
+			qZ = rbind( qZ , self$qY[i0:i1,,drop=FALSE] )
+		}
+		qZ = qZ[1:nrow(X),]
 		## <===
 		
 		## And finaly inverse quantiles
