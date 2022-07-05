@@ -1,7 +1,9 @@
 # SBCK (Statistical Bias Correction Kit)
 
-Use the version-0.4.X branch, the version-0.5.X is in alpha, and don't really
-work.
+## Release
+
+The last release is the 0.4.13 version, in the version-0.4.X branch. The
+developpment version is the 0.5.X version.
 
 ## Features
 - python3 and R version
