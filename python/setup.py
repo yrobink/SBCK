@@ -22,7 +22,9 @@
 ## Libraries ##
 ###############
 
-import sys,os
+import os
+import sys
+import sysconfig
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 import setuptools
@@ -42,7 +44,12 @@ for i,arg in enumerate(sys.argv):
 
 if i_eigen > -1:
 	del sys.argv[i_eigen]
+	
+############################
+## Python path resolution ##
+############################
 
+here = os.path.abspath( os.path.dirname(__file__) )
 
 ################################################################
 ## Some class and function to compile with Eigen and pybind11 ##
@@ -63,8 +70,7 @@ class get_pybind_include(object):##{{{
 ##}}}
 
 def get_eigen_include( propose_path = "" ):##{{{
-	
-	possible_path = [ propose_path , "/usr/include/" , "/usr/local/include/" ]
+	possible_path = [ propose_path , os.path.dirname(sysconfig.get_paths()['include']), "/usr/include/" , "/usr/local/include/" ]
 	if os.environ.get("HOME") is not None:
 		possible_path.append( os.path.join( os.environ["HOME"] , ".local/include" ) )
 	
@@ -141,8 +147,8 @@ class BuildExt(build_ext):##{{{
 
 ext_modules = [
 	Extension(
-		'SBCK.tools.__tools_cpp',
-		['SBCK/tools/src/tools.cpp'],
+		"SBCK.tools.__tools_cpp",
+		[ os.path.join(here, 'SBCK/tools/src/tools.cpp') ],
 		include_dirs=[
 			# Path to pybind11 headers
 			get_eigen_include(eigen_usr_include),
@@ -175,7 +181,7 @@ list_packages = [
 ## Infos from release ##
 ########################
 
-with open( "SBCK/__release.py" , "r" ) as f:
+with open( os.path.join(here, "SBCK/__release.py"), "r" ) as f:
 	lines = f.readlines()
 
 version_major = None
@@ -222,7 +228,7 @@ setup(
 	cmdclass         = {'build_ext': BuildExt},
 	zip_safe         = False,
 	packages         = list_packages,
-	package_dir      = { "SBCK" : "SBCK" }
+	package_dir      = { "SBCK" : os.path.join(here, "SBCK") }
 )
 
 
