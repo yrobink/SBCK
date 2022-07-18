@@ -103,6 +103,9 @@ class PrePostProcessing:##{{{
 		self._pipe = [ p(**kwargs) for p,kwargs in zip(pipe,pipe_kwargs) ]
 		if bc_method is not None:
 			self._bc_method  = bc_method( **bc_method_kwargs )
+		
+		self._kind = None
+		
 		##}}}
 	
 	def transform( self , X ):##{{{
@@ -119,11 +122,12 @@ class PrePostProcessing:##{{{
 		return X
 	##}}}
 	
-	def _pipe_transform( self , X ):##{{{
+	def _pipe_transform( self , X , kind ):##{{{
 		if X is None:
 			return None
 		Xt = X.copy()
 		
+		self._kind = kind
 		for p in self._pipe[::-1]:
 			Xt = p.transform(Xt)
 		
@@ -132,11 +136,12 @@ class PrePostProcessing:##{{{
 		return Xt
 	##}}}
 	
-	def _pipe_itransform( self , Xt ):##{{{
+	def _pipe_itransform( self , Xt , kind ):##{{{
 		if Xt is None:
 			return None
 		X = Xt.copy()
 		
+		self._kind = kind
 		X = self.itransform(X)
 		for p in self._pipe:
 			X = p.itransform(X)
@@ -149,9 +154,9 @@ class PrePostProcessing:##{{{
 		Fit the bias correction method after the pre-processing.
 		"""
 		
-		Y0t = self._pipe_transform(Y0)
-		X0t = self._pipe_transform(X0)
-		X1t = self._pipe_transform(X1)
+		Y0t = self._pipe_transform( Y0 , "Y0" )
+		X0t = self._pipe_transform( X0 , "X0" )
+		X1t = self._pipe_transform( X1 , "X1" )
 		
 		if X1 is None:
 			self._bc_method.fit( Y0t , X0t )
@@ -165,21 +170,21 @@ class PrePostProcessing:##{{{
 		the post-processing operation.
 		"""
 		
-		X0t = self._pipe_transform(X0)
-		X1t = self._pipe_transform(X1)
+		X0t = self._pipe_transform( X0 , "X0" )
+		X1t = self._pipe_transform( X1 , "X1" )
 		Z0t = None
 		Z1t = None
 		
 		if X0 is None:
 			Z1t = self._bc_method.predict(X1t)
-			return self._pipe_itransform(Z1t)
+			return self._pipe_itransform( Z1t , "X1" )
 		elif X1 is None:
 			Z0t = self._bc_method.predict(X0t)
-			return self._pipe_itransform(Z0t)
+			return self._pipe_itransform( Z0t , "X0" )
 		else:
 			Z1t,Z0t = self._bc_method.predict(X1t,X0t)
-			Z1 = self._pipe_itransform(Z1t)
-			Z0 = self._pipe_itransform(Z0t)
+			Z1 = self._pipe_itransform( Z1t , "X1" )
+			Z0 = self._pipe_itransform( Z0t , "X0" )
 			return Z1,Z0
 	##}}}
 	
