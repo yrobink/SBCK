@@ -77,15 +77,9 @@ class PPPSSR(PrePostProcessing): ##{{{
 		if cols is not None:
 			self._cols = np.array( [cols] , dtype = int ).squeeze()
 		
-		if isaved not in [0,1,2,"Y0","X0","X1"]:
-			raise ValueError(f"isaved (={isaved}) parameter must be in [0,1,2,'Y0','X0','X1']")
+		if isaved not in ["Y0","X0","X1"]:
+			raise ValueError(f"isaved (={isaved}) parameter must be in ['Y0','X0','X1']")
 		
-		if isaved == "Y0":
-			self._isaved = 0
-		elif isaved == "X0":
-			self._isaved = 1
-		elif isaved == "X1":
-			self._isaved = 2
 	##}}}
 	
 	def transform( self , X ):##{{{
@@ -98,13 +92,30 @@ class PPPSSR(PrePostProcessing): ##{{{
 			self._cols = [i for i in range(X.shape[1])]
 		cols = self._cols
 		
-		Xn = np.nanmin( np.where( X[:,cols] > 0 , X[:,cols] , np.nan ) , axis = 0 )
-		if self._isaved == self._icurrent:
-			self.Xn = Xn
+		Xn = np.array( [np.nanmin( np.where( X[:,cols] > 0 , X[:,cols] , np.nan ) , axis = 0 )] )
+		
+		if np.any(np.isnan(Xn)):
+			Xn[np.isnan(Xn)] = 1
 		
 		ncols = cols.size
 		Xt = X.copy()
-		Xt[:,cols] = np.where( (X[:,cols] > Xn).reshape(-1,ncols) , X[:,cols].reshape(-1,ncols) , np.random.uniform( low = Xn / 100 , high = Xn , size = (X.shape[0],cols.size) ) ).squeeze()
+		Xt[:,cols] = np.where( (X[:,cols] > Xn).reshape(-1,ncols) , X[:,cols].reshape(-1,ncols) , np.random.uniform( low = Xn / 100 , high = Xn , size = (X.shape[0],ncols) ) ).squeeze()
+#		nvalid = np.isnan(Xn)
+#		valid  = ~np.isnan(Xn)
+#		
+#		Xt = X.copy()
+#		
+#		if valid.sum() > 0:
+#			ncols = valid.sum()
+#			c = cols[valid]
+#			Xt[:,c] = np.where( (X[:,c] > Xn[c]).reshape(-1,ncols) , X[:,c].reshape(-1,ncols) , np.random.uniform( low = Xn[c] / 100 , high = Xn[c] , size = (X.shape[0],ncols) ) ).squeeze()
+#		else:
+#			ncols = nvalid.sum()
+#			c = cols[nvalid]
+#			Xt[:,c] = np.random.uniform( low = 0.001 , high = 1 , size = (X.shape[0],ncols) )
+		
+		if self._kind == "Y0":
+			self.Xn = Xn
 		
 		return Xt
 	##}}}
@@ -122,4 +133,5 @@ class PPPSSR(PrePostProcessing): ##{{{
 		##}}}
 	
 ##}}}
+
 
