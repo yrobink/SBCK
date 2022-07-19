@@ -129,6 +129,7 @@ class PrePostProcessing:##{{{
 		
 		self._kind = kind
 		for p in self._pipe[::-1]:
+			p._kind = kind
 			Xt = p.transform(Xt)
 		
 		Xt = self.transform(Xt)
@@ -144,6 +145,7 @@ class PrePostProcessing:##{{{
 		self._kind = kind
 		X = self.itransform(X)
 		for p in self._pipe:
+			p._kind = kind
 			X = p.itransform(X)
 		
 		return X
