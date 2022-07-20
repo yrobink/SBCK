@@ -165,7 +165,7 @@ class PPPNotFiniteAnalog(PrePostProcessing):##{{{
 		
 		## OK, we replace by analogs
 		D = ssd.cdist( Xt[self._is_valid[self._kind],:][:,self.analog_var] , Xt[~self._is_valid[self._kind],:][:,self.analog_var] ).argmin(0)
-		Xt[~self._is_valid[self._kind],:] = Xt[D,:]
+		Xt[~self._is_valid[self._kind],:] = Xt[self._is_valid[self._kind],:][D,:]
 		self._is_all_valid[self._kind] = True
 		
 		return Xt
