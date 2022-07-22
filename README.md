@@ -1,5 +1,13 @@
 # SBCK (Statistical Bias Correction Kit)
 
+## Clone
+
+[Python](https://github.com/yrobink/SBCK-python) and [R](https://github.com/yrobink/SBCK-R) version are given in git submodules, so use:
+
+~~~bash
+git clone --recurse-submodules https://github.com/yrobink/SBCK
+~~~
+
 ## Release
 
 The last release is the 0.4.13 version, in the version-0.4.X branch. The
