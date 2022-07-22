@@ -1,3 +1,6 @@
 [submodule "python"]
 	path = python
 	url = git@github.com:yrobink/SBCK-python.git
+[submodule "R"]
+	path = R
+	url = git@github.com:yrobink/SBCK-R.git
