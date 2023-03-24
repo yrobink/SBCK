@@ -53,6 +53,7 @@ Requires:
 - numpy
 - scipy
 - pybind11
+- a C++ compiler
 
 For python, just use the command:
 ```
@@ -62,6 +63,15 @@ python3 setup.py install --user
 If the Eigen library is not found, use:
 ```
 python3 setup.py install --user eigen="path-to-eigen"
+```
+
+### Conda
+
+If using conda to manage environments and packages, the module can be installed with:
+```
+conda create -n sbck eigen numpy scipy pybind11 cxx-compiler
+conda activate sbck
+python3 setup.py install --user
 ```
 
 ## R instruction
