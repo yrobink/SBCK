@@ -71,8 +71,10 @@ If using conda to manage environments and packages, the module can be installed 
 ```
 conda create -n sbck eigen numpy scipy pybind11 cxx-compiler
 conda activate sbck
-python3 setup.py install --user
+python setup.py install
 ```
+
+Make sure that you never try to import the package in an interpreter who's current working directory is the source folder. This would fail with `ModuleNotFoundError: No module named 'SBCK.tools.__tools_cpp'` since the compiled version of the module is not present in the source folder, but rather in the conda environment itself.
 
 ## R instruction
 
